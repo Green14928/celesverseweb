@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { put } from "@vercel/blob";
 import { randomUUID } from "crypto";
 import { getSession } from "@/lib/auth";
 
@@ -36,12 +35,10 @@ export async function POST(request: NextRequest) {
 
   const ext = file.name.split(".").pop() || "jpg";
   const filename = `${Date.now()}-${randomUUID().slice(0, 8)}.${ext}`;
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
 
-  await mkdir(uploadDir, { recursive: true });
+  const blob = await put(`uploads/${filename}`, file, {
+    access: "public",
+  });
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(uploadDir, filename), buffer);
-
-  return NextResponse.json({ url: `/uploads/${filename}` });
+  return NextResponse.json({ url: blob.url });
 }
