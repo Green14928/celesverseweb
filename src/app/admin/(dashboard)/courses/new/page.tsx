@@ -27,6 +27,7 @@ export default async function NewCoursePage({
         price: 0,
         teacherId: null,
         totalSlots: 0,
+        location: null,
         calendarColor: null,
         paymentLink: null,
         startDate: new Date(date),

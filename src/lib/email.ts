@@ -258,7 +258,7 @@ export async function sendPostponeEmail(data: PostponeEmailData) {
                 </table>
               </td>
             </tr>
-            ${courseInfoRows(data.location, data.startDate)}
+            ${courseInfoRows(data.location)}
             <tr>
               <td colspan="2" style="padding: 8px 0;">
                 <div style="border-top: 1px solid #E2EBE8;"></div>
