@@ -2,7 +2,6 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { upload } from "@vercel/blob/client";
 import { saveTeacher } from "@/features/admin/actions/teacher.action";
 
 interface TeacherFormProps {
@@ -35,12 +34,20 @@ export function TeacherForm({ teacherId, defaultValues }: TeacherFormProps) {
     setUploading(true);
     setError(null);
 
+    const formData = new FormData();
+    formData.append("file", file);
+
     try {
-      const blob = await upload(file.name, file, {
-        access: "public",
-        handleUploadUrl: "/api/upload",
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
       });
-      setPhoto(blob.url);
+      const data = await res.json();
+      if (res.ok) {
+        setPhoto(data.url);
+      } else {
+        setError(data.error || "上傳失敗");
+      }
     } catch {
       setError("上傳失敗，請稍後再試");
     }
