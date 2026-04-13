@@ -36,9 +36,16 @@ export async function POST(request: NextRequest) {
   const ext = file.name.split(".").pop() || "jpg";
   const filename = `${Date.now()}-${randomUUID().slice(0, 8)}.${ext}`;
 
-  const blob = await put(`uploads/${filename}`, file, {
-    access: "public",
-  });
-
-  return NextResponse.json({ url: blob.url });
+  try {
+    const blob = await put(`uploads/${filename}`, file, {
+      access: "public",
+    });
+    return NextResponse.json({ url: blob.url });
+  } catch (err) {
+    console.error("Blob upload error:", err);
+    return NextResponse.json(
+      { error: "圖片儲存失敗，請稍後再試" },
+      { status: 500 }
+    );
+  }
 }
