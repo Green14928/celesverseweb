@@ -3,7 +3,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { upload } from "@vercel/blob/client";
+import { uploadImage } from "@/lib/upload";
 import { saveTemplate } from "@/features/admin/actions/course-template.action";
 
 interface CourseTemplateFormProps {
@@ -42,11 +42,8 @@ export function CourseTemplateForm({
     const newUrls: string[] = [];
     for (const file of Array.from(files)) {
       try {
-        const blob = await upload(file.name, file, {
-          access: "public",
-          handleUploadUrl: "/api/upload",
-        });
-        newUrls.push(blob.url);
+        const url = await uploadImage(file);
+        newUrls.push(url);
       } catch {
         setError("上傳失敗，請稍後再試");
       }
