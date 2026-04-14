@@ -119,7 +119,7 @@ export default function TermsPage() {
 
             <div>
               <h2 className="text-lg font-serif font-light text-foreground mb-4">第十一條　聯絡我們</h2>
-              <p>關於本服務條款或本服務，若有任何需要協助的地方，請聯絡 <a href="mailto:celesverse.cs@gmail.com" className="text-gold-dust hover:underline">celesverse.cs@gmail.com</a>。</p>
+              <p>關於本服務條款或本服務，若有任何需要協助的地方，請聯絡 <a href="mailto:support@celesverse.co" className="text-gold-dust hover:underline">support@celesverse.co</a>。</p>
             </div>
           </div>
         </div>

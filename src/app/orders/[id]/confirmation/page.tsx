@@ -44,7 +44,6 @@ export default async function OrderConfirmationPage({
   const categoryName = order.items[0]?.course.template.category?.name;
   const payment = paymentMap[order.paymentStatus] ?? paymentMap.PENDING;
   const isPending = order.paymentStatus === "PENDING";
-  const paymentLink = order.items.find((item) => item.course.paymentLink)?.course.paymentLink ?? null;
 
   return (
     <div className="pt-36 md:pt-44 pb-24 mx-6 md:mx-12 lg:mx-16">
@@ -116,19 +115,6 @@ export default async function OrderConfirmationPage({
           </p>
         )}
 
-        {/* 付款按鈕 */}
-        {isPending && paymentLink && (
-          <div className="mt-8 text-center animate-float-up-delay-2">
-            <a
-              href={paymentLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block px-12 py-4 bg-foreground text-background text-sm tracking-widest uppercase hover:bg-moss transition-colors duration-500 font-sans"
-            >
-              前往付款
-            </a>
-          </div>
-        )}
 
         {/* 重寄確認信 */}
         <div className="mt-6">

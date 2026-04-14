@@ -104,7 +104,7 @@ export default function PrivacyPage() {
                   <p>（四）您可以在個人資料管理者的同意下要求存取與本人相關之個人資料並匯出副本。</p>
                   <p>（五）您可以要求撤銷或終止個人資料的蒐集權限。（惟要求刪除個人資料與會員帳號時，將無法繼續使用本網站服務。）</p>
                 </div>
-                <p>二、您得透過寄送電子郵件至 <a href="mailto:celesverse.cs@gmail.com" className="text-gold-dust hover:underline">celesverse.cs@gmail.com</a>（為避免電子郵件系統漏信或其他原因無法收悉，是否送達以本公司回覆為準）行使上開權利，本公司將於收受您的請求並確認身分後，於合理作業期限內處理並酌收必要之成本費用。若委託他人代為申請者應出具委任書，且提供本人及代理人之身分證明文件。</p>
+                <p>二、您得透過寄送電子郵件至 <a href="mailto:support@celesverse.co" className="text-gold-dust hover:underline">support@celesverse.co</a>（為避免電子郵件系統漏信或其他原因無法收悉，是否送達以本公司回覆為準）行使上開權利，本公司將於收受您的請求並確認身分後，於合理作業期限內處理並酌收必要之成本費用。若委託他人代為申請者應出具委任書，且提供本人及代理人之身分證明文件。</p>
                 <p>三、若您無法提供完整且確實的個人資料，將影響本公司和您的聯繫、完成交易、提供服務、身份驗證或處理消費、交易或客訴問題。建議您提供完整的個人資料及隨時更新。若因您未提供完整且確實個人資料，造成對您及第三人發生損害時，您應負擔一切責任，如造成本公司的損失時，本公司有權向您請求損害賠償。</p>
               </div>
             </div>
@@ -124,7 +124,7 @@ export default function PrivacyPage() {
 
             <div>
               <h2 className="text-lg font-serif font-light text-foreground mb-4">第九條　聯絡我們</h2>
-              <p>若您對於本《隱私權政策》有任何疑問、意見，請透過 <a href="mailto:celesverse.cs@gmail.com" className="text-gold-dust hover:underline">celesverse.cs@gmail.com</a> 聯絡我們。</p>
+              <p>若您對於本《隱私權政策》有任何疑問、意見，請透過 <a href="mailto:support@celesverse.co" className="text-gold-dust hover:underline">support@celesverse.co</a> 聯絡我們。</p>
             </div>
           </div>
         </div>

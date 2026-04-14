@@ -18,8 +18,8 @@ export function Footer() {
           <Link href="/terms" className="text-xs text-muted-fg font-sans hover:text-gold-dust transition-colors">
             使用者條款
           </Link>
-          <a href="mailto:contact@celesverse.com" className="text-sm font-light text-muted-fg font-sans hover:text-gold-dust transition-colors">
-            contact@celesverse.com
+          <a href="mailto:support@celesverse.co" className="text-sm font-light text-muted-fg font-sans hover:text-gold-dust transition-colors">
+            support@celesverse.co
           </a>
         </div>
       </div>

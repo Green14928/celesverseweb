@@ -2,10 +2,10 @@
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const from = process.env.EMAIL_FROM || "onboarding@resend.dev";
-const replyTo = process.env.EMAIL_REPLY_TO || "";
-const siteName = process.env.NEXT_PUBLIC_SITE_NAME || "CelesVerse";
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.celesverse.com";
+const from = (process.env.EMAIL_FROM || "noreply@celesverse.co").trim();
+const replyTo = (process.env.EMAIL_REPLY_TO || "").trim();
+const siteName = (process.env.NEXT_PUBLIC_SITE_NAME || "CELESVERSE 神仙部落").trim();
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.celesverse.co").trim();
 
 // 付款連結
 const PAYMENT_LINK = process.env.ECPAY_PAYMENT_LINK || "";
