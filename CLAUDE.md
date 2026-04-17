@@ -38,12 +38,16 @@ npm run lint         # ESLint 檢查
 - 庫存計算：剩餘名額 = totalSlots - soldCount，購買時需檢查
 
 ## 部署環境
-- Vercel（Function Region: sin1 新加坡）
-- Neon PostgreSQL（Singapore）
+- **Zeabur**（Linode Tokyo）— 主要部署平台
+  - 網址：https://celesverseweb.zeabur.app
+  - Service ID：`69de45cc0390b5cdd16d2e48`
+  - Zeabur API 操作參考共用記憶 `reference_zeabur.md`
+- ~~Vercel（Function Region: sin1 新加坡）~~ — 已停用
+- Zeabur PostgreSQL（postgresql-celesverse，內網 DNS `postgresql-siste.zeabur.internal:5432`）
 - Vercel Blob（圖片儲存）
 
 ## 必要環境變數
-- `DATABASE_URL` — Neon PostgreSQL 連線字串
+- `DATABASE_URL` — Zeabur PostgreSQL 連線字串（內網）
 - `ADMIN_JWT_SECRET` — 管理員 JWT 簽名密鑰
 - `BLOB_READ_WRITE_TOKEN` — Vercel Blob 存取 token
 
