@@ -41,6 +41,31 @@ function run(args) {
     console.log("[init-db] Schema looks current — running standard db push");
     run(["db", "push", "--accept-data-loss"]);
   }
+
+  // Ensure a SUPER_ADMIN exists so Google login can reach the dashboard.
+  const seedEmail = process.env.SEED_ADMIN_EMAIL || "amyclaw4928@gmail.com";
+  const seedName = process.env.SEED_ADMIN_NAME || "Amy";
+  const seedClient = new Client({ connectionString: url });
+  await seedClient.connect();
+  try {
+    const existing = await seedClient.query(
+      'SELECT COUNT(*)::int AS n FROM "Admin"'
+    );
+    if (existing.rows[0].n === 0) {
+      await seedClient.query(
+        `INSERT INTO "Admin" (id, email, name, role, "isActive", "createdAt", "updatedAt")
+         VALUES (gen_random_uuid()::text, $1, $2, 'SUPER_ADMIN', true, NOW(), NOW())`,
+        [seedEmail, seedName]
+      );
+      console.log(`[init-db] Seeded SUPER_ADMIN ${seedEmail}`);
+    } else {
+      console.log(`[init-db] Admin table already has ${existing.rows[0].n} row(s) — skip seed`);
+    }
+  } catch (err) {
+    console.warn("[init-db] admin seed skipped:", err.message);
+  } finally {
+    await seedClient.end();
+  }
 })().catch((err) => {
   console.error("[init-db] fatal:", err);
   process.exit(1);
