@@ -36,10 +36,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --chown=nextjs:nodejs prisma ./prisma
 COPY --chown=nextjs:nodejs prisma.config.ts ./
+COPY --chown=nextjs:nodejs init-db.js ./
 
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["sh", "-c", "node node_modules/prisma/build/index.js db push --accept-data-loss && node server.js"]
+CMD ["sh", "-c", "node init-db.js && node server.js"]
