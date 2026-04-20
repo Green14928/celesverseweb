@@ -1,4 +1,4 @@
-// 課程上下架切換按鈕
+// 課程上下架切換按鈕（iOS-style switch）
 "use client";
 
 import { togglePublish } from "@/features/admin/actions/course.action";
@@ -15,11 +15,18 @@ export function TogglePublishButton({
 
   return (
     <button
+      type="button"
       disabled={isPending}
       onClick={() => startTransition(() => togglePublish(courseId))}
-      className="rounded px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-100 transition-colors disabled:opacity-50"
+      className={`switch ${isPublished ? "on" : ""}`}
+      title={isPublished ? "點擊下架" : "點擊上架"}
     >
-      {isPending ? "..." : isPublished ? "下架" : "上架"}
+      <span className="track">
+        <span className="knob" />
+      </span>
+      <span className="lbl">
+        {isPending ? "…" : isPublished ? "已上架" : "未上架"}
+      </span>
     </button>
   );
 }

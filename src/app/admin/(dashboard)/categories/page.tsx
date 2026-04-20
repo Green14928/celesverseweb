@@ -5,9 +5,25 @@ export default async function CategoriesPage() {
   const categories = await getCategories();
 
   return (
-    <div className="max-w-2xl">
-      <h1 className="mb-8 text-2xl font-bold text-zinc-900">分類管理</h1>
-      <CategoryManager initialCategories={categories} />
-    </div>
+    <>
+      <div className="top-rail">
+        <div className="crumb">
+          <span>內容</span>
+          <span className="sep">/</span>
+          <span className="here">分類管理</span>
+        </div>
+      </div>
+
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">分類管理</h1>
+          <div className="page-sub">Categories</div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 720 }}>
+        <CategoryManager initialCategories={categories} />
+      </div>
+    </>
   );
 }

@@ -218,6 +218,107 @@ export async function sendPaymentConfirmedEmail(data: OrderEmailData) {
   });
 }
 
+/** 退費完成通知信 */
+interface RefundEmailData {
+  orderId: string;
+  orderNumber: string;
+  buyerName: string;
+  buyerEmail: string;
+  courseName: string;
+  amount: number;
+  invoiceVoided: boolean;
+  invoiceNumber?: string;
+  note?: string;
+}
+
+export async function sendRefundCompletedEmail(data: RefundEmailData) {
+  const result = await resend.emails.send({
+    from: `${siteName} <${from}>`,
+    replyTo: replyTo || undefined,
+    to: data.buyerEmail,
+    subject: `【${siteName}】退費完成通知 — ${data.orderNumber}`,
+    html: `
+      <div style="font-family: 'Helvetica Neue', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; color: #1B4A3A; background: #FAF8F3;">
+        <img src="${siteUrl}/images/logo-horizontal.png" alt="${siteName}" style="height: 36px; margin-bottom: 24px;" />
+        <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #1B4A3A;">退費完成通知</h1>
+        <p style="color: #5E7D6F; font-size: 14px; margin-bottom: 32px;">
+          ${data.buyerName} 您好，您的退費流程已全部完成，詳情如下。
+        </p>
+
+        <div style="background: #EFF4F2; border-radius: 8px; padding: 24px; margin-bottom: 32px; border: 1px solid #E2EBE8;">
+          <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 8px 0; color: #5E7D6F;">訂單編號</td>
+              <td style="padding: 8px 0; text-align: right; font-family: monospace; font-size: 13px; color: #1B4A3A;">${data.orderNumber}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #5E7D6F;">原課程</td>
+              <td style="padding: 8px 0; text-align: right; color: #1B4A3A;">${data.courseName}</td>
+            </tr>
+            <tr>
+              <td colspan="2" style="padding: 8px 0;">
+                <div style="border-top: 1px solid #E2EBE8;"></div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #5E7D6F; font-size: 15px;">退費金額</td>
+              <td style="padding: 8px 0; text-align: right; font-size: 18px; font-weight: 600; color: #1B4A3A;">NT$ ${data.amount.toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #5E7D6F;">刷退狀態</td>
+              <td style="padding: 8px 0; text-align: right; color: #10B981; font-weight: 500;">已完成 ✓</td>
+            </tr>
+            ${
+              data.invoiceVoided
+                ? `
+            <tr>
+              <td style="padding: 8px 0; color: #5E7D6F;">發票</td>
+              <td style="padding: 8px 0; text-align: right; color: #1B4A3A;">
+                已作廢${data.invoiceNumber ? `<div style="font-family: monospace; font-size: 12px; color: #5E7D6F; margin-top: 2px;">${data.invoiceNumber}</div>` : ""}
+              </td>
+            </tr>`
+                : ""
+            }
+            ${
+              data.note
+                ? `
+            <tr>
+              <td colspan="2" style="padding: 8px 0;">
+                <div style="border-top: 1px solid #E2EBE8;"></div>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2" style="padding: 8px 0;">
+                <div style="color: #5E7D6F; font-size: 13px; margin-bottom: 4px;">備註</div>
+                <div style="color: #1B4A3A; font-size: 14px; line-height: 1.6;">${data.note.replace(/\n/g, "<br/>")}</div>
+              </td>
+            </tr>`
+                : ""
+            }
+          </table>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 24px;">
+          <p style="color: #5E7D6F; font-size: 13px; line-height: 1.6;">
+            退費金額將依您的信用卡發卡行作業時間入帳，<br />
+            一般約 7～14 個工作天，請您留意信用卡帳單。<br />
+            如有任何疑問，歡迎直接回覆此信與我們聯絡。
+          </p>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #E2EBE8; margin: 24px 0;" />
+        <div style="text-align: center;">
+          <p style="color: #1B4A3A; font-size: 13px; letter-spacing: 0.3em; font-weight: 500;">
+            CELESVERSE
+          </p>
+        </div>
+      </div>
+    `,
+  });
+  console.log("[sendRefundCompletedEmail]", JSON.stringify(result));
+  return result;
+}
+
 /** 課程延期通知信 */
 interface PostponeEmailData {
   buyerName: string;

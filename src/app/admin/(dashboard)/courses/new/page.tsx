@@ -36,18 +36,34 @@ export default async function NewCoursePage({
     : undefined;
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-zinc-900">新增排程</h1>
-      <p className="mt-1 text-sm text-zinc-400">
-        選擇課程模板，設定排程資訊
-      </p>
-      <div className="mt-6">
-        <CourseForm
-          defaultValues={defaultValues}
-          templates={templates}
-          teachers={teachers}
-        />
+    <>
+      <div className="top-rail">
+        <div className="crumb">
+          <a href="/admin">首頁</a>
+          <span className="sep">/</span>
+          <span className="here">新增排程</span>
+        </div>
       </div>
-    </div>
+
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">新增排程</h1>
+          <div className="page-sub">New Schedule</div>
+        </div>
+      </div>
+
+      <div className="panel" style={{ maxWidth: 820 }}>
+        <div className="panel-body">
+          <p className="muted" style={{ fontSize: 12, marginBottom: 20 }}>
+            選擇課程模板，設定排程資訊
+          </p>
+          <CourseForm
+            defaultValues={defaultValues}
+            templates={templates}
+            teachers={teachers}
+          />
+        </div>
+      </div>
+    </>
   );
 }

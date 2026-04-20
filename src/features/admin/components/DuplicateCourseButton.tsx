@@ -18,7 +18,11 @@ export function DuplicateCourseButton({
   const [loading, setLoading] = useState(false);
 
   async function handleDuplicate() {
-    if (!confirm(`確定要複製「${courseName}」嗎？\n將建立一個未上架的副本，日期和報名人數會被清空。`)) {
+    if (
+      !confirm(
+        `確定要複製「${courseName}」嗎？\n將建立一個未上架的副本，日期和報名人數會被清空。`,
+      )
+    ) {
       return;
     }
 
@@ -36,11 +40,12 @@ export function DuplicateCourseButton({
 
   return (
     <button
+      type="button"
       onClick={handleDuplicate}
       disabled={loading}
-      className="text-sm text-zinc-500 hover:text-zinc-700 disabled:opacity-50"
+      className="op-btn"
     >
-      {loading ? "複製中..." : "複製"}
+      {loading ? "複製中…" : "複製"}
     </button>
   );
 }

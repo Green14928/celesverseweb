@@ -7,12 +7,24 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "test:up": "docker compose -f docker-compose.test.yml up -d",
+    "test:down": "docker compose -f docker-compose.test.yml down",
+    "test:reset": "docker compose -f docker-compose.test.yml down -v && docker compose -f docker-compose.test.yml up -d",
+    "test:db:push": "dotenv -e .env.test -- prisma db push && prisma generate",
+    "test:studio": "dotenv -e .env.test -- prisma studio",
+    "test:dev": "dotenv -e .env.test -- next dev -p 3001",
+    "test:seed:admin": "dotenv -e .env.test -- tsx prisma/seed-admin.ts",
+    "test:seed:course": "dotenv -e .env.test -- tsx prisma/seed-test-course.ts",
+    "test:seed:teacher": "dotenv -e .env.test -- tsx prisma/seed-test-teacher.ts",
+    "test:restore:amy": "dotenv -e .env.test -- tsx prisma/restore-amy-admin.ts",
+    "test:retry:invoice": "dotenv -e .env.test -- tsx prisma/retry-invoice.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.11.2",
     "@fullcalendar/daygrid": "^6.1.20",
     "@fullcalendar/interaction": "^6.1.20",
     "@fullcalendar/react": "^6.1.20",
@@ -25,6 +37,7 @@
     "jose": "^6.2.2",
     "lucide-react": "^1.8.0",
     "next": "16.2.3",
+    "next-auth": "^5.0.0-beta.29",
     "pg": "^8.20.0",
     "prisma": "^7.7.0",
     "react": "19.2.4",
@@ -37,6 +50,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
     "tailwindcss": "^4",

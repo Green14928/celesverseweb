@@ -46,40 +46,52 @@ export function PostponeButton({
   if (isPostponed) {
     return (
       <button
+        type="button"
         onClick={handleCancel}
         disabled={loading}
-        className="rounded-md border border-emerald-300 px-2 py-1 text-xs text-emerald-600 hover:bg-emerald-50 disabled:opacity-50 transition-colors"
+        className="op-btn"
       >
-        {loading ? "..." : "恢復"}
+        {loading ? "…" : "恢復"}
       </button>
     );
   }
 
   if (showForm) {
     return (
-      <div className="flex items-center gap-2">
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 4,
+          padding: "2px 4px",
+          background: "var(--admin-bg)",
+          borderRadius: 6,
+        }}
+      >
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="rounded-md border border-zinc-300 px-2 py-1 text-xs"
+          style={{ fontSize: 11, padding: "3px 6px" }}
         />
         <input
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="備註（選填）"
-          className="rounded-md border border-zinc-300 px-2 py-1 text-xs w-20"
+          placeholder="備註"
+          style={{ fontSize: 11, padding: "3px 6px", width: 70 }}
         />
         <button
+          type="button"
           onClick={handlePostpone}
           disabled={loading || !date}
-          className="rounded-md bg-red-500 px-2 py-1 text-xs text-white hover:bg-red-600 disabled:opacity-50"
+          className="op-btn danger"
         >
-          {loading ? "..." : "確定"}
+          {loading ? "…" : "確定"}
         </button>
         <button
+          type="button"
           onClick={() => setShowForm(false)}
-          className="text-xs text-zinc-400 hover:text-zinc-600"
+          className="op-btn"
         >
           取消
         </button>
@@ -88,10 +100,7 @@ export function PostponeButton({
   }
 
   return (
-    <button
-      onClick={() => setShowForm(true)}
-      className="rounded-md border border-red-200 px-2 py-1 text-xs text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-    >
+    <button type="button" onClick={() => setShowForm(true)} className="op-btn">
       延期
     </button>
   );

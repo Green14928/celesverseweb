@@ -26,7 +26,7 @@ async function EmailPreviewContent({
 
   const registrationHtml = `
     <div style="font-family: 'Helvetica Neue', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; color: #1B4A3A; background: #FAF8F3;">
-      <img src="/images/logo-horizontal.png" alt="CelesVerse" style="height: 36px; margin-bottom: 24px;" />
+      <img src="/images/logo-horizontal.png" alt="CELESVERSE" style="height: 36px; margin-bottom: 24px;" />
       <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #1B4A3A;">神仙部落付款連結</h1>
       <p style="color: #5E7D6F; font-size: 14px; margin-bottom: 32px;">
         ${sampleData.buyerName} 您好，感謝您報名${sampleData.categoryName}課程，以下是您的訂單資訊。
@@ -114,7 +114,7 @@ async function EmailPreviewContent({
 
   const paymentHtml = `
     <div style="font-family: 'Helvetica Neue', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; color: #1B4A3A; background: #FAF8F3;">
-      <img src="/images/logo-horizontal.png" alt="CelesVerse" style="height: 36px; margin-bottom: 24px;" />
+      <img src="/images/logo-horizontal.png" alt="CELESVERSE" style="height: 36px; margin-bottom: 24px;" />
       <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #1B4A3A;">付款已確認</h1>
       <p style="color: #5E7D6F; font-size: 14px; margin-bottom: 32px;">
         ${sampleData.buyerName} 您好，我們已收到您的${sampleData.categoryName}課程付款，您的報名已正式完成！
@@ -193,7 +193,7 @@ async function EmailPreviewContent({
 
   const postponeHtml = `
     <div style="font-family: 'Helvetica Neue', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; color: #1B4A3A; background: #FAF8F3;">
-      <img src="/images/logo-horizontal.png" alt="CelesVerse" style="height: 36px; margin-bottom: 24px;" />
+      <img src="/images/logo-horizontal.png" alt="CELESVERSE" style="height: 36px; margin-bottom: 24px;" />
       <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #1B4A3A;">課程延期通知</h1>
       <p style="color: #5E7D6F; font-size: 14px; margin-bottom: 32px;">
         ${sampleData.buyerName} 您好，您報名的${sampleData.categoryName}課程日期有所調整，請留意以下更新資訊。
@@ -268,51 +268,84 @@ async function EmailPreviewContent({
   const currentType = type;
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-zinc-900 mb-2">Email 預覽</h1>
-      <p className="text-sm text-zinc-400 mb-6">
-        修改 <code className="bg-zinc-100 px-1 rounded">src/lib/email.ts</code> 後重新整理即可預覽
+    <>
+      <div className="top-rail">
+        <div className="crumb">
+          <span>工具</span>
+          <span className="sep">/</span>
+          <span className="here">Email 預覽</span>
+        </div>
+      </div>
+
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Email 預覽</h1>
+          <div className="page-sub">Email Templates</div>
+        </div>
+      </div>
+
+      <p className="muted" style={{ fontSize: 12, marginBottom: 20 }}>
+        修改{" "}
+        <code
+          style={{
+            background: "var(--admin-bg-warm)",
+            padding: "1px 6px",
+            borderRadius: 4,
+            fontSize: 11,
+          }}
+        >
+          src/lib/email.ts
+        </code>{" "}
+        後重新整理即可預覽
       </p>
 
-      {/* 切換 */}
-      <div className="flex rounded-lg border border-zinc-200 overflow-hidden mb-6 w-fit">
+      <div className="filter-pills" style={{ marginBottom: 20 }}>
         <a
           href="/admin/email-preview?type=registration"
-          className={`px-4 py-1.5 text-xs font-medium transition-colors ${
-            currentType === "registration" || !currentType ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-50"
-          }`}
+          className={currentType === "registration" || !currentType ? "on" : ""}
         >
           報名確認信
         </a>
         <a
           href="/admin/email-preview?type=payment"
-          className={`px-4 py-1.5 text-xs font-medium transition-colors ${
-            currentType === "payment" ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-50"
-          }`}
+          className={currentType === "payment" ? "on" : ""}
         >
           付款確認信
         </a>
         <a
           href="/admin/email-preview?type=postpone"
-          className={`px-4 py-1.5 text-xs font-medium transition-colors ${
-            currentType === "postpone" ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-50"
-          }`}
+          className={currentType === "postpone" ? "on" : ""}
         >
           延期通知信
         </a>
       </div>
 
-      <div className="border border-zinc-200 rounded-lg overflow-hidden bg-white">
-        <div className="bg-zinc-50 px-4 py-2 border-b border-zinc-200 text-xs text-zinc-500">
-          {currentType === "postpone" ? "延期通知信預覽" : currentType === "payment" ? "付款確認信預覽" : "報名確認信預覽"}
+      <div className="panel">
+        <div className="panel-head">
+          <div>
+            <h2 className="panel-title">
+              {currentType === "postpone"
+                ? "延期通知信"
+                : currentType === "payment"
+                  ? "付款確認信"
+                  : "報名確認信"}
+            </h2>
+            <div className="panel-en">PREVIEW</div>
+          </div>
         </div>
         <div
-          className="p-4"
+          className="panel-body"
+          style={{ padding: 0 }}
           dangerouslySetInnerHTML={{
-            __html: currentType === "postpone" ? postponeHtml : currentType === "payment" ? paymentHtml : registrationHtml,
+            __html:
+              currentType === "postpone"
+                ? postponeHtml
+                : currentType === "payment"
+                  ? paymentHtml
+                  : registrationHtml,
           }}
         />
       </div>
-    </div>
+    </>
   );
 }

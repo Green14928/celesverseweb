@@ -21,16 +21,32 @@ export default async function EditTemplatePage({
   if (!template) notFound();
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-zinc-900">編輯課程</h1>
-      <div className="mt-6">
-        <CourseTemplateForm
-          templateId={template.id}
-          defaultValues={template}
-          existingImages={template.images.map((img) => img.url)}
-          categories={categories}
-        />
+    <>
+      <div className="top-rail">
+        <div className="crumb">
+          <a href="/admin/templates">課程管理</a>
+          <span className="sep">/</span>
+          <span className="here">{template.title}</span>
+        </div>
       </div>
-    </div>
+
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">編輯課程</h1>
+          <div className="page-sub">Edit Template</div>
+        </div>
+      </div>
+
+      <div className="panel" style={{ maxWidth: 820 }}>
+        <div className="panel-body">
+          <CourseTemplateForm
+            templateId={template.id}
+            defaultValues={template}
+            existingImages={template.images.map((img) => img.url)}
+            categories={categories}
+          />
+        </div>
+      </div>
+    </>
   );
 }

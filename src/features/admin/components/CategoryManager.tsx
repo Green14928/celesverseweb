@@ -39,7 +39,6 @@ export function CategoryManager({
     });
     if (result.success) {
       setNewName("");
-      // 重新載入頁面以取得最新資料
       window.location.reload();
     } else {
       setError(result.error);
@@ -81,96 +80,138 @@ export function CategoryManager({
   }
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {error && (
-        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+        <div
+          style={{
+            padding: "10px 14px",
+            borderRadius: 6,
+            background: "var(--admin-red-light)",
+            color: "var(--admin-red)",
+            fontSize: 13,
+            border: "1px solid rgba(192, 86, 75, 0.25)",
+          }}
+        >
           {error}
         </div>
       )}
 
-      {/* 新增分類 */}
-      <div className="flex gap-3">
-        <input
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          placeholder="新分類名稱"
-          className="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-          onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-        />
-        <button
-          onClick={handleAdd}
-          disabled={loading || !newName.trim()}
-          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white hover:bg-zinc-700 disabled:opacity-50 transition-colors"
-        >
-          新增
-        </button>
+      <div className="panel">
+        <div className="panel-head">
+          <div>
+            <h2 className="panel-title">新增分類</h2>
+            <div className="panel-en">NEW CATEGORY</div>
+          </div>
+        </div>
+        <div className="panel-body">
+          <div style={{ display: "flex", gap: 10 }}>
+            <input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="新分類名稱"
+              style={{ flex: 1 }}
+              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            />
+            <button
+              onClick={handleAdd}
+              disabled={loading || !newName.trim()}
+              className="btn btn-primary"
+            >
+              新增
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* 分類列表 */}
-      <div className="divide-y divide-zinc-200 rounded-lg border border-zinc-200">
+      <div className="panel">
+        <div className="panel-head">
+          <div>
+            <h2 className="panel-title">現有分類</h2>
+            <div className="panel-en">LIST</div>
+          </div>
+          <div className="filter-count">
+            共 <span className="num">{categories.length}</span> 項
+          </div>
+        </div>
+
         {categories.length === 0 ? (
-          <div className="p-6 text-center text-sm text-zinc-400">
-            尚無分類
+          <div style={{ padding: "40px 20px", textAlign: "center" }}>
+            <p className="muted">尚無分類</p>
           </div>
         ) : (
-          categories.map((cat) => (
-            <div
-              key={cat.id}
-              className="flex items-center gap-3 px-4 py-3"
-            >
-              {editingId === cat.id ? (
-                <>
-                  <input
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="flex-1 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-                  />
-                  <input
-                    type="number"
-                    value={editOrder}
-                    onChange={(e) => setEditOrder(Number(e.target.value))}
-                    className="w-20 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-                    placeholder="排序"
-                  />
-                  <button
-                    onClick={handleSaveEdit}
-                    disabled={loading}
-                    className="text-sm text-zinc-600 hover:text-zinc-900"
-                  >
-                    儲存
-                  </button>
-                  <button
-                    onClick={() => setEditingId(null)}
-                    className="text-sm text-zinc-400 hover:text-zinc-600"
-                  >
-                    取消
-                  </button>
-                </>
-              ) : (
-                <>
-                  <span className="flex-1 text-sm text-zinc-700">
-                    {cat.name}
-                  </span>
-                  <span className="text-xs text-zinc-400">
-                    排序: {cat.sortOrder}
-                  </span>
-                  <button
-                    onClick={() => startEdit(cat)}
-                    className="text-sm text-zinc-500 hover:text-zinc-700"
-                  >
-                    編輯
-                  </button>
-                  <button
-                    onClick={() => handleDelete(cat.id, cat.name)}
-                    disabled={loading}
-                    className="text-sm text-red-400 hover:text-red-600"
-                  >
-                    刪除
-                  </button>
-                </>
-              )}
-            </div>
-          ))
+          <div className="panel-body" style={{ padding: 0 }}>
+            {categories.map((cat, i) => (
+              <div
+                key={cat.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "14px 22px",
+                  borderTop:
+                    i === 0 ? "none" : "1px solid var(--admin-border)",
+                }}
+              >
+                {editingId === cat.id ? (
+                  <>
+                    <input
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      style={{ flex: 1 }}
+                    />
+                    <input
+                      type="number"
+                      value={editOrder}
+                      onChange={(e) => setEditOrder(Number(e.target.value))}
+                      style={{ width: 80 }}
+                      placeholder="排序"
+                    />
+                    <button
+                      onClick={handleSaveEdit}
+                      disabled={loading}
+                      className="op-btn"
+                    >
+                      儲存
+                    </button>
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="op-btn"
+                    >
+                      取消
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ flex: 1, fontWeight: 600, fontSize: 13 }}>
+                      {cat.name}
+                    </span>
+                    <span
+                      className="muted"
+                      style={{
+                        fontSize: 11,
+                        letterSpacing: 1,
+                      }}
+                    >
+                      排序 {cat.sortOrder}
+                    </span>
+                    <button
+                      onClick={() => startEdit(cat)}
+                      className="op-btn"
+                    >
+                      編輯
+                    </button>
+                    <button
+                      onClick={() => handleDelete(cat.id, cat.name)}
+                      disabled={loading}
+                      className="op-btn danger"
+                    >
+                      刪除
+                    </button>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

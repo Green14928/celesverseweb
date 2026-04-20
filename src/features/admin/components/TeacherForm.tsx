@@ -18,6 +18,22 @@ interface TeacherFormProps {
   };
 }
 
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  fontSize: 12,
+  fontWeight: 600,
+  marginBottom: 6,
+  letterSpacing: 0.5,
+};
+
+const hintStyle: React.CSSProperties = {
+  fontSize: 11,
+  color: "var(--admin-text-muted)",
+  marginTop: -4,
+  marginBottom: 6,
+  lineHeight: 1.6,
+};
+
 export function TeacherForm({ teacherId, defaultValues }: TeacherFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,98 +89,100 @@ export function TeacherForm({ teacherId, defaultValues }: TeacherFormProps) {
     }
   }
 
-  const inputClass =
-    "mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500";
-
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
+    <form
+      onSubmit={handleSubmit}
+      style={{ display: "flex", flexDirection: "column", gap: 20 }}
+    >
       {error && (
-        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+        <div
+          style={{
+            padding: "10px 14px",
+            borderRadius: 6,
+            background: "var(--admin-red-light)",
+            color: "var(--admin-red)",
+            fontSize: 13,
+            border: "1px solid rgba(192, 86, 75, 0.25)",
+          }}
+        >
           {error}
         </div>
       )}
 
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          姓名 *
-        </label>
+        <label style={labelStyle}>姓名 *</label>
         <input
           name="name"
           required
           defaultValue={defaultValues?.name}
-          className={inputClass}
+          style={{ width: "100%" }}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          頭銜 / 專長
-        </label>
+        <label style={labelStyle}>頭銜 / 專長</label>
         <input
           name="title"
           defaultValue={defaultValues?.title ?? ""}
-          className={inputClass}
           placeholder="例如：瑜伽導師 · 身心靈療癒師"
+          style={{ width: "100%" }}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          簡短介紹
-        </label>
-        <p className="text-xs text-zinc-400 mt-0.5 mb-1">
-          顯示在卡片上的簡短描述
-        </p>
+        <label style={labelStyle}>簡短介紹</label>
+        <p style={hintStyle}>顯示在卡片上的簡短描述</p>
         <textarea
           name="bio"
           rows={3}
           defaultValue={defaultValues?.bio ?? ""}
-          className={inputClass}
+          style={{ width: "100%", resize: "vertical" }}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          完整故事
-        </label>
-        <p className="text-xs text-zinc-400 mt-0.5 mb-1">
+        <label style={labelStyle}>完整故事</label>
+        <p style={hintStyle}>
           用 ## 寫標題，「—」自動變金色。**文字** 粗體。&gt;&gt; 開頭置中。空行分段。
         </p>
         <textarea
           name="fullBio"
           rows={10}
           defaultValue={defaultValues?.fullBio ?? ""}
-          className={inputClass}
+          style={{ width: "100%", resize: "vertical", fontFamily: "ui-monospace, monospace", fontSize: 12 }}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          導師的話 / Memo
-        </label>
-        <p className="text-xs text-zinc-400 mt-0.5 mb-1">
-          顯示在詳情頁底部的引言區塊
-        </p>
+        <label style={labelStyle}>導師的話 / Memo</label>
+        <p style={hintStyle}>顯示在詳情頁底部的引言區塊</p>
         <textarea
           name="quote"
           rows={4}
           defaultValue={defaultValues?.quote ?? ""}
-          className={inputClass}
+          style={{ width: "100%", resize: "vertical" }}
         />
       </div>
 
-      {/* 照片上傳 */}
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          照片
-        </label>
-        <div className="mt-1 space-y-3">
+        <label style={labelStyle}>照片</label>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {photo && (
-            <div className="relative w-24 h-24 rounded-full overflow-hidden border border-zinc-200">
+            <div
+              style={{
+                position: "relative",
+                width: 96,
+                height: 96,
+                borderRadius: "50%",
+                overflow: "hidden",
+                border: "1px solid var(--admin-border)",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={photo}
                 alt="導師照片預覽"
-                className="w-full h-full object-cover"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
               <button
                 type="button"
@@ -172,7 +190,21 @@ export function TeacherForm({ teacherId, defaultValues }: TeacherFormProps) {
                   setPhoto(null);
                   if (fileInputRef.current) fileInputRef.current.value = "";
                 }}
-                className="absolute top-0 right-0 w-6 h-6 bg-zinc-900/70 text-white rounded-full text-xs flex items-center justify-center hover:bg-zinc-900"
+                style={{
+                  position: "absolute",
+                  top: 4,
+                  right: 4,
+                  width: 22,
+                  height: 22,
+                  borderRadius: "50%",
+                  background: "rgba(26, 24, 22, 0.75)",
+                  color: "#fff",
+                  border: "none",
+                  fontSize: 11,
+                  cursor: "pointer",
+                  display: "grid",
+                  placeItems: "center",
+                }}
               >
                 ✕
               </button>
@@ -184,41 +216,42 @@ export function TeacherForm({ teacherId, defaultValues }: TeacherFormProps) {
             accept="image/jpeg,image/png,image/webp,image/gif"
             onChange={handlePhotoUpload}
             disabled={uploading}
-            className="block w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-zinc-100 file:text-zinc-700 hover:file:bg-zinc-200 disabled:opacity-50"
+            style={{
+              fontSize: 12,
+              color: "var(--admin-text-muted)",
+            }}
           />
-          {uploading && <p className="text-xs text-zinc-400">上傳中...</p>}
+          {uploading && (
+            <p style={{ fontSize: 11, color: "var(--admin-text-muted)" }}>
+              上傳中...
+            </p>
+          )}
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          排序
-        </label>
+        <label style={labelStyle}>排序</label>
         <input
           name="sortOrder"
           type="number"
           defaultValue={defaultValues?.sortOrder ?? 0}
-          className={inputClass}
+          style={{ width: 120 }}
         />
       </div>
 
-      <div className="flex gap-3 pt-4">
+      <div style={{ display: "flex", gap: 10, paddingTop: 8 }}>
         <button
           type="submit"
           disabled={isSubmitting || uploading}
-          className="rounded-lg bg-zinc-900 px-6 py-2.5 text-sm font-semibold text-white hover:bg-zinc-700 transition-colors disabled:cursor-not-allowed disabled:bg-zinc-400"
+          className="btn btn-primary"
         >
           {isSubmitting
             ? "儲存中..."
             : teacherId
-            ? "更新導師"
-            : "新增導師"}
+              ? "更新導師"
+              : "新增導師"}
         </button>
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="rounded-lg border border-zinc-300 px-6 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
-        >
+        <button type="button" onClick={() => router.back()} className="btn">
           取消
         </button>
       </div>

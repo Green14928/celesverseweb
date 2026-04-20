@@ -20,11 +20,12 @@ export function DeleteCourseButton({
 
   return (
     <button
+      type="button"
       disabled={isPending}
       onClick={handleDelete}
-      className="rounded px-2 py-1 text-xs text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+      className="op-btn danger"
     >
-      {isPending ? "..." : "刪除"}
+      {isPending ? "…" : "刪除"}
     </button>
   );
 }

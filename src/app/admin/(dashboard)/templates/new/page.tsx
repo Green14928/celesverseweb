@@ -8,11 +8,27 @@ export default async function NewTemplatePage() {
   });
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-zinc-900">新增課程</h1>
-      <div className="mt-6">
-        <CourseTemplateForm categories={categories} />
+    <>
+      <div className="top-rail">
+        <div className="crumb">
+          <a href="/admin/templates">課程管理</a>
+          <span className="sep">/</span>
+          <span className="here">新增</span>
+        </div>
       </div>
-    </div>
+
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">新增課程</h1>
+          <div className="page-sub">New Template</div>
+        </div>
+      </div>
+
+      <div className="panel" style={{ maxWidth: 820 }}>
+        <div className="panel-body">
+          <CourseTemplateForm categories={categories} />
+        </div>
+      </div>
+    </>
   );
 }

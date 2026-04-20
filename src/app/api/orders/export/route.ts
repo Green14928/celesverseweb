@@ -1,23 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { auth } from "@/auth";
+import type { Prisma } from "@/generated/prisma/client";
 
 const paymentLabels: Record<string, string> = {
   PENDING: "待付款",
   PAID: "已付款",
-  REFUNDED: "已退款",
+  FAILED: "付款失敗",
 };
 
-const orderLabels: Record<string, string> = {
-  CONFIRMED: "已確認",
-  PREPARING: "準備中",
-  COMPLETED: "已完成",
-  CANCELLED: "已取消",
+const statusLabels: Record<string, string> = {
+  PENDING: "待付款",
+  PAID: "已付款",
+  REFUND_PENDING: "退費處理中",
+  REFUNDED: "已退費",
+  CANCELED: "已取消",
 };
 
 export async function GET(request: NextRequest) {
-  const adminId = await getSession();
-  if (!adminId) {
+  const session = await auth();
+  if (!session || session.user.userType !== "admin") {
     return NextResponse.json({ error: "未授權" }, { status: 401 });
   }
 
@@ -25,17 +27,16 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get("search") || "";
   const month = searchParams.get("month") || "";
   const paymentStatus = searchParams.get("paymentStatus") || "";
-  const orderStatus = searchParams.get("orderStatus") || "";
+  const status = searchParams.get("status") || "";
 
-  // 建立查詢條件
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const where: any = {};
+  const where: Prisma.OrderWhereInput = {};
 
   if (search) {
     where.OR = [
-      { buyerName: { contains: search, mode: "insensitive" } },
-      { buyerEmail: { contains: search, mode: "insensitive" } },
-      { buyerPhone: { contains: search } },
+      { orderNumber: { contains: search, mode: "insensitive" } },
+      { member: { name: { contains: search, mode: "insensitive" } } },
+      { member: { email: { contains: search, mode: "insensitive" } } },
+      { member: { phone: { contains: search } } },
     ];
   }
 
@@ -47,17 +48,23 @@ export async function GET(request: NextRequest) {
   }
 
   if (paymentStatus) {
-    where.paymentStatus = paymentStatus;
+    where.paymentStatus = paymentStatus as "PENDING" | "PAID" | "FAILED";
   }
 
-  if (orderStatus) {
-    where.orderStatus = orderStatus;
+  if (status) {
+    where.status = status as
+      | "PENDING"
+      | "PAID"
+      | "REFUND_PENDING"
+      | "REFUNDED"
+      | "CANCELED";
   }
 
   const orders = await prisma.order.findMany({
     where,
     orderBy: { createdAt: "desc" },
     include: {
+      member: { select: { name: true, email: true, phone: true } },
       items: {
         include: {
           course: {
@@ -74,14 +81,14 @@ export async function GET(request: NextRequest) {
   const rows = orders.map((order) => {
     const courses = order.items.map((i) => i.course.template.title).join("；");
     return [
-      order.id,
-      escapeCsv(order.buyerName),
-      order.buyerEmail,
-      order.buyerPhone || "",
+      order.orderNumber,
+      escapeCsv(order.member.name),
+      order.member.email,
+      order.member.phone || "",
       escapeCsv(courses),
-      order.totalPrice,
+      order.totalAmount,
       paymentLabels[order.paymentStatus] || order.paymentStatus,
-      orderLabels[order.orderStatus] || order.orderStatus,
+      statusLabels[order.status] || order.status,
       new Date(order.createdAt).toLocaleDateString("zh-TW"),
     ].join(",");
   });

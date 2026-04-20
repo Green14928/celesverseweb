@@ -1,22 +1,24 @@
 // 管理後台 — 訂單列表
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { OrderActions } from "@/features/admin/components/OrderActions";
 import { OrderFilters } from "@/features/admin/components/OrderFilters";
 import { Suspense } from "react";
+import type { Prisma } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
 
-const paymentLabel: Record<string, { text: string; className: string }> = {
-  PENDING: { text: "待付款", className: "bg-amber-100 text-amber-700" },
-  PAID: { text: "已付款", className: "bg-emerald-100 text-emerald-700" },
-  REFUNDED: { text: "已退款", className: "bg-purple-100 text-purple-700" },
+const paymentLabel: Record<string, { text: string; cls: string }> = {
+  PENDING: { text: "待付款", cls: "tag-amber" },
+  PAID: { text: "已付款", cls: "tag-green" },
+  FAILED: { text: "付款失敗", cls: "tag-red" },
 };
 
-const orderLabel: Record<string, { text: string; className: string }> = {
-  CONFIRMED: { text: "已確認", className: "bg-blue-100 text-blue-700" },
-  PREPARING: { text: "準備中", className: "bg-cyan-100 text-cyan-700" },
-  COMPLETED: { text: "已完成", className: "bg-emerald-100 text-emerald-700" },
-  CANCELLED: { text: "已取消", className: "bg-zinc-100 text-zinc-500" },
+const statusLabel: Record<string, { text: string; cls: string }> = {
+  PENDING: { text: "待付款", cls: "tag-amber" },
+  PAID: { text: "已付款", cls: "tag-green" },
+  REFUND_PENDING: { text: "退費處理中", cls: "tag-amber" },
+  REFUNDED: { text: "已退費", cls: "tag-purple" },
+  CANCELED: { text: "已取消", cls: "tag-neutral" },
 };
 
 export default async function AdminOrdersPage({
@@ -26,15 +28,14 @@ export default async function AdminOrdersPage({
 }) {
   const { search, year, month } = await searchParams;
 
-  // 建立查詢條件
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const where: any = {};
+  const where: Prisma.OrderWhereInput = {};
 
   if (search) {
     where.OR = [
-      { buyerName: { contains: search, mode: "insensitive" } },
-      { buyerEmail: { contains: search, mode: "insensitive" } },
-      { buyerPhone: { contains: search } },
+      { orderNumber: { contains: search, mode: "insensitive" } },
+      { member: { name: { contains: search, mode: "insensitive" } } },
+      { member: { email: { contains: search, mode: "insensitive" } } },
+      { member: { phone: { contains: search } } },
     ];
   }
 
@@ -52,6 +53,7 @@ export default async function AdminOrdersPage({
     where,
     orderBy: { createdAt: "desc" },
     include: {
+      member: { select: { name: true, email: true, phone: true } },
       items: {
         include: {
           course: {
@@ -59,107 +61,132 @@ export default async function AdminOrdersPage({
           },
         },
       },
+      invoices: { select: { id: true, invoiceNumber: true, status: true } },
     },
   });
 
-
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-zinc-900 mb-6">訂單管理</h1>
-
-      {/* 搜尋 + 篩選 + 匯出 */}
-      <Suspense>
-        <OrderFilters />
-      </Suspense>
-
-      {/* 篩選結果提示 */}
-      <p className="text-xs text-zinc-400 mb-4">
-        共 {orders.length} 筆訂單
-        {search && <span> · 搜尋「{search}」</span>}
-        {year && month && <span> · {year} 年 {month} 月</span>}
-      </p>
-
-      {orders.length === 0 ? (
-        <p className="py-12 text-center text-zinc-400">
-          {search || month ? "沒有符合條件的訂單" : "還沒有任何訂單"}
-        </p>
-      ) : (
-        <div className="overflow-x-auto rounded-lg border border-zinc-200">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-zinc-200 text-zinc-500 bg-zinc-50">
-              <tr>
-                <th className="px-4 py-3 font-medium">訂單編號</th>
-                <th className="px-4 py-3 font-medium">購買者</th>
-                <th className="px-4 py-3 font-medium">課程</th>
-                <th className="px-4 py-3 font-medium">金額</th>
-                <th className="px-4 py-3 font-medium">付款</th>
-                <th className="px-4 py-3 font-medium">訂單</th>
-                <th className="px-4 py-3 font-medium">時間</th>
-                <th className="px-4 py-3 font-medium">操作</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              {orders.map((order) => {
-                const payment =
-                  paymentLabel[order.paymentStatus] ?? paymentLabel.PENDING;
-                const status =
-                  orderLabel[order.orderStatus] ?? orderLabel.CONFIRMED;
-                return (
-                  <tr key={order.id} className="hover:bg-zinc-50/50">
-                    <td className="px-4 py-3 font-mono text-xs text-zinc-500">
-                      {order.id.slice(0, 12)}...
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-zinc-900">{order.buyerName}</div>
-                      <div className="text-xs text-zinc-400">
-                        {order.buyerEmail}
-                      </div>
-                      {order.buyerPhone && (
-                        <div className="text-xs text-zinc-400">
-                          {order.buyerPhone}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-zinc-600">
-                      {order.items
-                        .map((item) => item.course.template.title)
-                        .join(", ")}
-                    </td>
-                    <td className="px-4 py-3 text-zinc-900">
-                      NT$ {order.totalPrice.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${payment.className}`}
-                      >
-                        {payment.text}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}
-                      >
-                        {status.text}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-zinc-400 whitespace-nowrap">
-                      {new Date(order.createdAt).toLocaleDateString("zh-TW")}
-                    </td>
-                    <td className="px-4 py-3">
-                      <OrderActions
-                        orderId={order.id}
-                        paymentStatus={order.paymentStatus}
-                        orderStatus={order.orderStatus}
-                        buyerName={order.buyerName}
-                      />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+    <>
+      <div className="top-rail">
+        <div className="crumb">
+          <span>銷售</span>
+          <span className="sep">/</span>
+          <span className="here">訂單管理</span>
         </div>
-      )}
-    </div>
+      </div>
+
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">訂單管理</h1>
+          <div className="page-sub">Orders</div>
+        </div>
+      </div>
+
+      <div className="panel">
+        <div className="panel-head" style={{ padding: "14px 22px" }}>
+          <Suspense>
+            <OrderFilters />
+          </Suspense>
+          <div className="caption">
+            共 <span className="serif-num" style={{ fontSize: 14 }}>{orders.length}</span> 筆
+            {search && <> · 搜尋「{search}」</>}
+            {year && month && (
+              <> · {year} 年 {month} 月</>
+            )}
+          </div>
+        </div>
+
+        {orders.length === 0 ? (
+          <div style={{ padding: "60px 20px", textAlign: "center" }} className="muted">
+            {search || month ? "沒有符合條件的訂單" : "還沒有任何訂單"}
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>訂單編號</th>
+                  <th>會員</th>
+                  <th>課程</th>
+                  <th>金額</th>
+                  <th>付款</th>
+                  <th>狀態</th>
+                  <th>發票</th>
+                  <th>時間</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map((order) => {
+                  const payment =
+                    paymentLabel[order.paymentStatus] ?? paymentLabel.PENDING;
+                  const status =
+                    statusLabel[order.status] ?? statusLabel.PENDING;
+                  const activeInvoice = order.invoices.find(
+                    (inv) => inv.status === "ISSUED",
+                  );
+                  return (
+                    <tr key={order.id}>
+                      <td>
+                        <Link
+                          href={`/admin/orders/${order.id}`}
+                          className="link"
+                          style={{ fontFamily: "var(--admin-font-serif)", fontSize: 12 }}
+                        >
+                          {order.orderNumber}
+                        </Link>
+                      </td>
+                      <td>
+                        <Link href={`/admin/orders/${order.id}`} className="link">
+                          <div style={{ fontWeight: 600 }}>{order.member.name}</div>
+                          <div className="caption" style={{ textTransform: "none", letterSpacing: 0 }}>
+                            {order.member.email}
+                          </div>
+                          {order.member.phone && (
+                            <div className="caption" style={{ textTransform: "none", letterSpacing: 0 }}>
+                              {order.member.phone}
+                            </div>
+                          )}
+                        </Link>
+                      </td>
+                      <td>
+                        <Link href={`/admin/orders/${order.id}`} className="link">
+                          {order.items
+                            .map((item) => item.course.template.title)
+                            .join(", ")}
+                        </Link>
+                      </td>
+                      <td className="tnum">
+                        <span style={{ fontSize: 10, color: "var(--admin-text-muted)", marginRight: 2 }}>
+                          NT$
+                        </span>
+                        {order.totalAmount.toLocaleString()}
+                      </td>
+                      <td>
+                        <span className={`tag ${payment.cls}`}>{payment.text}</span>
+                      </td>
+                      <td>
+                        <span className={`tag ${status.cls}`}>{status.text}</span>
+                      </td>
+                      <td>
+                        {activeInvoice ? (
+                          <span className="tnum" style={{ fontSize: 12 }}>
+                            {activeInvoice.invoiceNumber}
+                          </span>
+                        ) : (
+                          <span className="muted">—</span>
+                        )}
+                      </td>
+                      <td className="muted" style={{ fontSize: 12, whiteSpace: "nowrap" }}>
+                        {new Date(order.createdAt).toLocaleDateString("zh-TW")}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </>
   );
 }

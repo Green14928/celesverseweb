@@ -1,31 +1,83 @@
-// 管理後台 — 課程行事曆
+// 管理後台 — 課程行事曆 + 課程列表
 import Link from "next/link";
 import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
-import { CalendarWithLegend } from "@/features/admin/components/CalendarWithLegend";
+import { AdminCalendar } from "@/features/admin/components/AdminCalendar";
 import { getCalendarLegend } from "@/features/admin/actions/site-content.action";
 import { TogglePublishButton } from "@/features/admin/components/TogglePublishButton";
 import { DeleteCourseButton } from "@/features/admin/components/DeleteCourseButton";
 import { PostponeButton } from "@/features/admin/components/PostponeButton";
 import { DuplicateCourseButton } from "@/features/admin/components/DuplicateCourseButton";
 import { CourseListFilters } from "@/features/admin/components/CourseListFilters";
-import { getCourseStatus, courseStatusLabels } from "@/lib/course-status";
 import type { LegendItem } from "@/features/admin/components/EditableLegend";
 
 export const dynamic = "force-dynamic";
 
 const DEFAULT_COLORS = [
-  "#1B5B4A", "#2D8B78", "#D4943A", "#8B5E3C",
-  "#3B5998", "#7C3AED", "#BE185D", "#4B5563",
-  "#F97316", "#0891B2",
+  "#7d9e6a",
+  "#9c7fb8",
+  "#c5956b",
+  "#6a8ea3",
+  "#2a3349",
+  "#b88a4a",
+  "#c0564b",
+  "#8a8471",
 ];
+
+const MONTHS_ZH = [
+  "一月",
+  "二月",
+  "三月",
+  "四月",
+  "五月",
+  "六月",
+  "七月",
+  "八月",
+  "九月",
+  "十月",
+  "十一月",
+  "十二月",
+];
+
+type RegStatus = "draft" | "full" | "hot" | "open";
+
+function regStatus(isPublished: boolean, filled: number, total: number): RegStatus {
+  if (!isPublished) return "draft";
+  if (total > 0 && filled >= total) return "full";
+  if (total > 0 && filled / total >= 0.8) return "hot";
+  return "open";
+}
+
+const REG_LABEL: Record<RegStatus, string> = {
+  draft: "草稿",
+  full: "額滿",
+  hot: "熱報",
+  open: "報名中",
+};
+
+function timeLabel(iso: Date | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const h = d.getHours();
+  const m = d.getMinutes();
+  if (h === 0 && m === 0) return "";
+  const isAM = h < 12;
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  const mins = m === 0 ? "" : `:${String(m).padStart(2, "0")}`;
+  return `${isAM ? "上午" : "下午"} ${h12}${mins}`;
+}
 
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; cy?: string; cm?: string }>;
+  searchParams: Promise<{
+    tab?: string;
+    cy?: string;
+    cm?: string;
+    q?: string;
+  }>;
 }) {
-  const { tab = "active", cy, cm } = await searchParams;
+  const { tab = "active", cy, cm, q } = await searchParams;
 
   const [allCourses, categories, savedLegend] = await Promise.all([
     prisma.course.findMany({
@@ -56,13 +108,7 @@ export default async function AdminPage({
     getCalendarLegend(),
   ]);
 
-  // 計算每門課的狀態
-  const coursesWithStatus = allCourses.map((c) => ({
-    ...c,
-    status: getCourseStatus(c),
-  }));
-
-  // 行事曆資料（全部課程）
+  // Calendar data
   const calendarCourses = allCourses.map((c) => ({
     id: c.id,
     title: c.template.title,
@@ -71,6 +117,10 @@ export default async function AdminPage({
     isPublished: c.isPublished,
     categoryName: c.template.category?.name ?? null,
     calendarColor: c.calendarColor ?? null,
+    teacherName: c.teacher?.name ?? null,
+    price: c.price,
+    filled: c.soldCount,
+    total: c.totalSlots,
   }));
 
   // Legend
@@ -88,21 +138,41 @@ export default async function AdminPage({
   legendItems.push({
     key: "_unpublished",
     label: "未上架",
-    color: "#A1A1AA",
+    color: "#b0a998",
     editable: false,
   });
 
-  // 分頁篩選
-  let filteredCourses = coursesWithStatus;
-  if (tab === "active") {
-    filteredCourses = coursesWithStatus.filter(
-      (c) => c.status === "upcoming" || c.status === "in_progress" || c.status === "unscheduled" || c.status === "postponed"
-    );
-  } else if (tab === "completed") {
-    filteredCourses = coursesWithStatus.filter((c) => c.status === "completed");
+  const colorByCategory = new Map<string, string>();
+  legendItems.forEach((it) => {
+    if (it.editable !== false && it.label) colorByCategory.set(it.label, it.color);
+  });
+  function courseColor(
+    c: (typeof allCourses)[number],
+  ): string {
+    if (c.calendarColor) return c.calendarColor;
+    if (c.template.category?.name) {
+      return (
+        colorByCategory.get(c.template.category.name) ?? "#c5956b"
+      );
+    }
+    return "#c5956b";
   }
 
-  // 年月篩選（針對課程列表）
+  // Filters
+  const statusFilter = tab;
+  const courseStatus = (c: (typeof allCourses)[number]) =>
+    regStatus(c.isPublished, c.soldCount, c.totalSlots);
+
+  let filteredCourses = allCourses;
+  if (statusFilter === "active") {
+    filteredCourses = allCourses.filter((c) => {
+      const s = courseStatus(c);
+      return s !== "draft" && s !== "full";
+    });
+  } else if (statusFilter === "completed") {
+    filteredCourses = allCourses.filter((c) => courseStatus(c) === "full");
+  }
+
   if (cy && cm && !isNaN(Number(cy)) && !isNaN(Number(cm))) {
     const y = Number(cy);
     const m = Number(cm);
@@ -112,150 +182,313 @@ export default async function AdminPage({
       filteredCourses = filteredCourses.filter((c) => {
         if (!c.startDate) return false;
         const start = new Date(c.startDate);
-        // 課程在該月有任何重疊
         const end = c.endDate ? new Date(c.endDate) : start;
         return start < monthEnd && end >= monthStart;
       });
     }
   }
 
+  if (q) {
+    const lq = q.toLowerCase();
+    filteredCourses = filteredCourses.filter(
+      (c) =>
+        c.template.title.toLowerCase().includes(lq) ||
+        (c.teacher?.name ?? "").toLowerCase().includes(lq),
+    );
+  }
+
+  // Stat strip values (for current month only, to mirror handoff)
+  const now = new Date();
+  const monthCourses = allCourses.filter((c) => {
+    if (!c.startDate) return false;
+    const d = new Date(c.startDate);
+    return (
+      d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+    );
+  });
+  const publishedCount = monthCourses.filter((c) => c.isPublished).length;
+  const totalCap = monthCourses.reduce((s, c) => s + c.totalSlots, 0) || 1;
+  const totalFilled = monthCourses.reduce((s, c) => s + c.soldCount, 0);
+  const fillRate = Math.round((totalFilled / totalCap) * 100);
+  const revenue = monthCourses.reduce(
+    (s, c) => s + c.price * c.soldCount,
+    0,
+  );
+  const teacherIds = new Set(
+    allCourses.map((c) => c.teacher?.name).filter(Boolean),
+  );
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-zinc-900">課程行事曆</h1>
-          <p className="mt-1 text-sm text-zinc-400">
-            點擊日期新增課程，點擊課程自訂顏色或編輯
-          </p>
+    <>
+      <div className="top-rail">
+        <div className="crumb">
+          <span>內容</span>
+          <span className="sep">/</span>
+          <span className="here">課程管理</span>
         </div>
-        <Link
-          href="/admin/courses/new"
-          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 transition-colors"
-        >
-          新增課程
-        </Link>
       </div>
 
-      {/* 行事曆 */}
-      <CalendarWithLegend
-        courses={calendarCourses}
-        initialLegendItems={legendItems}
-      />
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">課程管理</h1>
+          <div className="page-sub">Courses</div>
+        </div>
+        <div className="page-actions">
+          <Link href="/admin/courses/new" className="btn btn-primary">
+            + 新增課程
+          </Link>
+        </div>
+      </div>
+
+      {/* Stat strip */}
+      <div className="stat-strip with-intro">
+        <div className="stat-intro">
+          <div className="cycle">THIS MONTH</div>
+          <div className="cycle-name">
+            {now.getFullYear()} · {MONTHS_ZH[now.getMonth()]}
+          </div>
+          <div className="cycle-hint">
+            本月共 {monthCourses.length} 堂課程 · {teacherIds.size} 位講師在線
+          </div>
+        </div>
+        <div className="stat">
+          <div className="stat-label">本月課程</div>
+          <div className="stat-value">
+            {monthCourses.length}
+            <span className="unit">堂</span>
+          </div>
+        </div>
+        <div className="stat">
+          <div className="stat-label">已上架</div>
+          <div className="stat-value">
+            {publishedCount}
+            <span className="unit">/ {monthCourses.length || 0}</span>
+          </div>
+        </div>
+        <div className="stat">
+          <div className="stat-label">報名率</div>
+          <div className="stat-value">
+            {monthCourses.length ? fillRate : 0}
+            <span className="unit">%</span>
+          </div>
+        </div>
+        <div className="stat">
+          <div className="stat-label">預估營收</div>
+          <div className="stat-value">
+            <span className="unit" style={{ marginLeft: 0, marginRight: 4 }}>
+              NT$
+            </span>
+            {revenue.toLocaleString()}
+          </div>
+        </div>
+      </div>
+
+      {/* Calendar */}
+      <AdminCalendar courses={calendarCourses} legendItems={legendItems} />
 
       {/* 課程列表 */}
-      <div className="mt-12">
-        <h2 className="text-lg font-semibold text-zinc-800 mb-4">
-          課程列表
-        </h2>
+      <div className="panel" style={{ marginTop: 20 }}>
+        <div className="panel-head">
+          <div className="panel-head-left">
+            <h3 className="panel-title">課程列表</h3>
+            <span className="panel-en">
+              COURSE ROSTER · {now.getFullYear()}.
+              {String(now.getMonth() + 1).padStart(2, "0")}
+            </span>
+          </div>
+          <Link href="/admin/courses/new" className="btn btn-accent btn-sm">
+            + 新增課程
+          </Link>
+        </div>
 
-        <Suspense>
-          <CourseListFilters />
-        </Suspense>
+        <div className="filter-row">
+          <Suspense>
+            <CourseListFilters />
+          </Suspense>
+          <div className="filter-spacer" />
+          <div className="filter-count">
+            共<span className="num">{filteredCourses.length}</span>門課程
+          </div>
+        </div>
 
-        <p className="text-xs text-zinc-400 mb-4">
-          共 {filteredCourses.length} 門課程
-        </p>
-
-        {filteredCourses.length === 0 ? (
-          <p className="py-12 text-center text-zinc-400">沒有符合條件的課程</p>
-        ) : (
-          <div className="overflow-x-auto rounded-lg border border-zinc-200">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-zinc-200 text-zinc-500 bg-zinc-50">
+        <div style={{ overflowX: "auto" }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th style={{ minWidth: 240 }}>課程名稱</th>
+                <th>分類</th>
+                <th>講師</th>
+                <th>日期</th>
+                <th>報名</th>
+                <th>價格</th>
+                <th>上架</th>
+                <th>課程狀態</th>
+                <th style={{ textAlign: "right" }}>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredCourses.length === 0 ? (
                 <tr>
-                  <th className="px-4 py-3 font-medium">課程名稱</th>
-                  <th className="px-4 py-3 font-medium">分類</th>
-                  <th className="px-4 py-3 font-medium">導師</th>
-                  <th className="px-4 py-3 font-medium">日期</th>
-                  <th className="px-4 py-3 font-medium">名額</th>
-                  <th className="px-4 py-3 font-medium">價格</th>
-                  <th className="px-4 py-3 font-medium">上架</th>
-                  <th className="px-4 py-3 font-medium">課程狀態</th>
-                  <th className="px-4 py-3 font-medium">操作</th>
+                  <td
+                    colSpan={9}
+                    style={{
+                      textAlign: "center",
+                      padding: 40,
+                      color: "var(--admin-text-muted)",
+                      fontSize: 12,
+                    }}
+                  >
+                    此條件下尚無課程
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100">
-                {filteredCourses.map((course) => {
+              ) : (
+                filteredCourses.map((course) => {
                   const remaining = course.totalSlots - course.soldCount;
-                  const statusInfo = courseStatusLabels[course.status];
+                  const pct =
+                    course.totalSlots > 0
+                      ? Math.round((course.soldCount / course.totalSlots) * 100)
+                      : 0;
+                  const capClass =
+                    course.soldCount >= course.totalSlots && course.totalSlots > 0
+                      ? "full"
+                      : pct >= 80
+                        ? "hot"
+                        : "";
+                  const status = courseStatus(course);
+                  const color = courseColor(course);
+                  const teacher = course.teacher?.name ?? null;
+                  const tLabel = timeLabel(course.startDate);
+                  const start = course.startDate
+                    ? new Date(course.startDate).toISOString().slice(0, 10)
+                    : null;
+                  const end = course.endDate
+                    ? new Date(course.endDate).toISOString().slice(0, 10)
+                    : null;
+                  const range = !start
+                    ? "—"
+                    : !end || end === start
+                      ? start.replace(/-/g, "/")
+                      : `${start.slice(5).replace("-", "/")} ~ ${end.slice(5).replace("-", "/")}`;
                   return (
-                    <tr key={course.id} className="hover:bg-zinc-50/50">
-                      <td className="px-4 py-3">
-                        <Link
-                          href={`/admin/courses/${course.id}`}
-                          className="text-zinc-900 font-medium hover:text-gold-dust transition-colors"
-                        >
-                          {course.template.title}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-zinc-500">
-                        {course.template.category?.name || "—"}
-                      </td>
-                      <td className="px-4 py-3 text-zinc-500">
-                        {course.teacher?.name || "—"}
-                      </td>
-                      <td className="px-4 py-3 text-zinc-500 whitespace-nowrap">
-                        {course.startDate
-                          ? new Date(course.startDate).toLocaleDateString("zh-TW")
-                          : "—"}
-                        {course.endDate && (
-                          <>
-                            <span className="text-zinc-300 mx-1">~</span>
-                            {new Date(course.endDate).toLocaleDateString("zh-TW")}
-                          </>
-                        )}
-                        {course.isPostponed && course.postponedTo && (
-                          <div className="text-xs text-red-500 mt-0.5">
-                            延期至 {new Date(course.postponedTo).toLocaleDateString("zh-TW")}
-                            {course.postponedNote && (
-                              <span className="text-zinc-400 ml-1">
-                                ({course.postponedNote})
-                              </span>
+                    <tr key={course.id}>
+                      <td>
+                        <div className="course-name">
+                          <span className="dot" style={{ background: color }} />
+                          <div>
+                            <Link
+                              href={`/admin/courses/${course.id}`}
+                              className="title link"
+                            >
+                              {course.template.title}
+                            </Link>
+                            {course.isPostponed && (
+                              <div className="meta">
+                                POSTPONED
+                                {course.postponedTo &&
+                                  ` · 延至 ${new Date(course.postponedTo).toLocaleDateString("zh-TW")}`}
+                              </div>
                             )}
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        {course.template.category ? (
+                          <span
+                            className="cat-tag"
+                            style={{
+                              background: `${color}1a`,
+                              color,
+                            }}
+                          >
+                            {course.template.category.name}
+                          </span>
+                        ) : (
+                          <span className="muted">—</span>
+                        )}
+                      </td>
+                      <td>
+                        {teacher ? (
+                          <div className="teacher">
+                            <div className="ava">{teacher.charAt(0)}</div>
+                            <div className="name">{teacher}</div>
+                          </div>
+                        ) : (
+                          <div className="teacher empty">
+                            <div className="name">— 未指派</div>
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-zinc-500">
-                        {course.soldCount}/{course.totalSlots}
-                        {remaining <= 3 && remaining > 0 && (
-                          <span className="ml-1 text-amber-500 text-xs">
-                            剩{remaining}
-                          </span>
-                        )}
-                        {remaining <= 0 && (
-                          <span className="ml-1 text-red-500 text-xs">額滿</span>
-                        )}
+                      <td>
+                        <div className="date-cell">
+                          <div className="range">{range}</div>
+                          {tLabel && <div className="time">{tLabel}</div>}
+                          {course.isPostponed &&
+                            course.postponedTo && (
+                              <div className="postponed">
+                                延至{" "}
+                                {new Date(
+                                  course.postponedTo,
+                                ).toLocaleDateString("zh-TW")}
+                                {course.postponedNote && (
+                                  <span className="muted">
+                                    {" "}
+                                    · {course.postponedNote}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                        </div>
                       </td>
-                      <td className="px-4 py-3 text-zinc-900">
-                        NT$ {course.price.toLocaleString()}
+                      <td>
+                        <div className={`capacity ${capClass}`}>
+                          <div className="nums">
+                            <span className="filled">{course.soldCount}</span>
+                            <span className="slash">/</span>
+                            <span className="total">{course.totalSlots}</span>
+                          </div>
+                          <div className="bar">
+                            <span
+                              style={{ width: `${Math.max(pct, 3)}%` }}
+                            />
+                          </div>
+                          {remaining > 0 && remaining <= 3 && (
+                            <div
+                              style={{
+                                fontSize: 10,
+                                color: "var(--admin-red)",
+                              }}
+                            >
+                              剩 {remaining}
+                            </div>
+                          )}
+                        </div>
                       </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                            course.isPublished
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-zinc-100 text-zinc-500"
-                          }`}
-                        >
-                          {course.isPublished ? "已上架" : "未上架"}
+                      <td>
+                        <div className="price">
+                          <span className="cur">NT$</span>
+                          {course.price.toLocaleString()}
+                        </div>
+                      </td>
+                      <td>
+                        <TogglePublishButton
+                          courseId={course.id}
+                          isPublished={course.isPublished}
+                        />
+                      </td>
+                      <td>
+                        <span className={`reg-status ${status}`}>
+                          <span className="sd" />
+                          {REG_LABEL[status]}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusInfo.className}`}
+                      <td>
+                        <div
+                          className="ops"
+                          style={{ justifyContent: "flex-end" }}
                         >
-                          {statusInfo.text}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <TogglePublishButton
-                            courseId={course.id}
-                            isPublished={course.isPublished}
-                          />
                           <Link
                             href={`/admin/courses/${course.id}/edit`}
-                            className="text-sm text-zinc-500 hover:text-zinc-700"
+                            className="op-btn"
                           >
                             編輯
                           </Link>
@@ -263,13 +496,16 @@ export default async function AdminPage({
                             courseId={course.id}
                             courseName={course.template.title}
                           />
+                          <div className="op-divider" />
                           <PostponeButton
                             courseId={course.id}
                             courseName={course.template.title}
                             isPostponed={course.isPostponed}
                             postponedTo={
                               course.postponedTo
-                                ? course.postponedTo.toISOString().split("T")[0]
+                                ? course.postponedTo
+                                    .toISOString()
+                                    .split("T")[0]
                                 : null
                             }
                           />
@@ -281,12 +517,12 @@ export default async function AdminPage({
                       </td>
                     </tr>
                   );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

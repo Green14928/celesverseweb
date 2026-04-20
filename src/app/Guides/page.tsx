@@ -19,7 +19,7 @@ export default async function TeachersPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center space-y-6 mb-16 md:mb-24">
             <span className="block text-[10px] tracking-[0.3em] uppercase text-muted-fg font-sans">
-              Celesverse Guides
+              CELESVERSE Guides
             </span>
             <h1 className="text-4xl md:text-6xl font-serif font-light">
             </h1>

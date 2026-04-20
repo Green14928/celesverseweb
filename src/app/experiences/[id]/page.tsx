@@ -2,6 +2,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { PurchaseForm } from "@/features/orders/components/PurchaseForm";
 import { CourseGallery } from "@/features/courses/components/CourseGallery";
 
@@ -26,6 +27,10 @@ export default async function CourseDetailPage({
   });
 
   if (!course) notFound();
+
+  const session = await auth();
+  const memberLoggedIn = session?.user?.userType === "member";
+  const memberEmail = memberLoggedIn ? session!.user.email : null;
 
   const remaining = course.totalSlots - course.soldCount;
   const isSoldOut = remaining <= 0;
@@ -171,6 +176,8 @@ export default async function CourseDetailPage({
                   courseId={course.id}
                   courseName={course.template.title}
                   price={course.price}
+                  memberLoggedIn={memberLoggedIn}
+                  memberEmail={memberEmail}
                 />
               </div>
             </div>

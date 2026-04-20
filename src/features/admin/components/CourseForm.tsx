@@ -51,6 +51,22 @@ function formatDate(date: Date | null): string {
   return new Date(date).toISOString().split("T")[0];
 }
 
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  fontSize: 12,
+  fontWeight: 600,
+  marginBottom: 6,
+  letterSpacing: 0.5,
+};
+
+const hintStyle: React.CSSProperties = {
+  fontSize: 11,
+  color: "var(--admin-text-muted)",
+  marginTop: -4,
+  marginBottom: 8,
+  lineHeight: 1.6,
+};
+
 export function CourseForm({
   courseId,
   defaultValues,
@@ -106,26 +122,33 @@ export function CourseForm({
     }
   }
 
-  const inputClass =
-    "mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500";
-
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
+    <form
+      onSubmit={handleSubmit}
+      style={{ display: "flex", flexDirection: "column", gap: 20 }}
+    >
       {error && (
-        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+        <div
+          style={{
+            padding: "10px 14px",
+            borderRadius: 6,
+            background: "var(--admin-red-light)",
+            color: "var(--admin-red)",
+            fontSize: 13,
+            border: "1px solid rgba(192, 86, 75, 0.25)",
+          }}
+        >
           {error}
         </div>
       )}
 
-      {/* 模板選擇 */}
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          課程模板 *
-        </label>
+        <label style={labelStyle}>課程模板 *</label>
         <select
           value={selectedTemplateId}
           onChange={(e) => setSelectedTemplateId(e.target.value)}
-          className={inputClass}
+          className="select"
+          style={{ width: "100%" }}
         >
           <option value="">請選擇課程</option>
           {templates.map((tmpl) => (
@@ -137,27 +160,54 @@ export function CourseForm({
         </select>
       </div>
 
-      {/* 模板預覽 */}
       {selectedTemplate && (
-        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-          <div className="flex gap-4">
+        <div
+          style={{
+            background: "var(--admin-bg)",
+            border: "1px solid var(--admin-border)",
+            borderRadius: 8,
+            padding: 14,
+          }}
+        >
+          <div style={{ display: "flex", gap: 14 }}>
             {selectedTemplate.images?.[0] && (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={selectedTemplate.images[0].url}
                 alt={selectedTemplate.title}
-                className="w-20 h-20 object-cover rounded"
+                style={{
+                  width: 72,
+                  height: 72,
+                  objectFit: "cover",
+                  borderRadius: 6,
+                  flexShrink: 0,
+                }}
               />
             )}
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-zinc-900">
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontWeight: 600, fontSize: 13, margin: 0 }}>
                 {selectedTemplate.title}
               </p>
               {selectedTemplate.category && (
-                <p className="text-xs text-zinc-400 mt-0.5">
+                <p
+                  className="muted"
+                  style={{ fontSize: 11, marginTop: 2, marginBottom: 0 }}
+                >
                   {selectedTemplate.category.name}
                 </p>
               )}
-              <p className="text-sm text-zinc-500 mt-1 line-clamp-2">
+              <p
+                className="muted"
+                style={{
+                  fontSize: 12,
+                  marginTop: 6,
+                  marginBottom: 0,
+                  overflow: "hidden",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                }}
+              >
                 {selectedTemplate.description}
               </p>
             </div>
@@ -165,46 +215,46 @@ export function CourseForm({
         </div>
       )}
 
-      <div className="h-px bg-zinc-200" />
+      <hr className="hair" />
 
-      {/* 排程資訊 */}
-      <div className="grid grid-cols-2 gap-4">
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 16,
+        }}
+      >
         <div>
-          <label className="block text-sm font-medium text-zinc-700">
-            價格（NT$）*
-          </label>
+          <label style={labelStyle}>價格（NT$）*</label>
           <input
             name="price"
             type="number"
             min={1}
             required
             defaultValue={defaultValues?.price}
-            className={inputClass}
+            style={{ width: "100%" }}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-zinc-700">
-            總名額 *
-          </label>
+          <label style={labelStyle}>總名額 *</label>
           <input
             name="totalSlots"
             type="number"
             min={1}
             required
             defaultValue={defaultValues?.totalSlots}
-            className={inputClass}
+            style={{ width: "100%" }}
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          授課導師
-        </label>
+        <label style={labelStyle}>授課導師</label>
         <select
           name="teacherId"
           defaultValue={defaultValues?.teacherId ?? ""}
-          className={inputClass}
+          className="select"
+          style={{ width: "100%" }}
         >
           <option value="">未指定</option>
           {teachers.map((t) => (
@@ -216,48 +266,39 @@ export function CourseForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          上課地點
-        </label>
+        <label style={labelStyle}>上課地點</label>
         <input
           name="location"
           defaultValue={defaultValues?.location ?? ""}
-          className={inputClass}
           placeholder="例如：台北市大安區..."
+          style={{ width: "100%" }}
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <div>
-          <label className="block text-sm font-medium text-zinc-700">
-            開課日期
-          </label>
+          <label style={labelStyle}>開課日期</label>
           <input
             name="startDate"
             type="date"
             defaultValue={formatDate(defaultValues?.startDate ?? null)}
-            className={inputClass}
+            style={{ width: "100%" }}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-zinc-700">
-            結束日期
-          </label>
+          <label style={labelStyle}>結束日期</label>
           <input
             name="endDate"
             type="date"
             defaultValue={formatDate(defaultValues?.endDate ?? null)}
-            className={inputClass}
+            style={{ width: "100%" }}
           />
         </div>
       </div>
 
-      {/* 付款連結 */}
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          付款連結
-        </label>
-        <p className="text-xs text-zinc-400 mt-0.5 mb-1">
+        <label style={labelStyle}>付款連結</label>
+        <p style={hintStyle}>
           輸入第三方付款頁面的網址（如綠界、藍新）
         </p>
         <input
@@ -265,27 +306,32 @@ export function CourseForm({
           type="url"
           defaultValue={defaultValues?.paymentLink ?? ""}
           placeholder="https://..."
-          className={inputClass}
+          style={{ width: "100%" }}
         />
       </div>
 
-      {/* 行事曆顏色 */}
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          行事曆顏色
-        </label>
-        <p className="text-xs text-zinc-400 mt-0.5 mb-2">
-          不選則使用分類預設
-        </p>
-        <div className="flex flex-wrap items-center gap-2">
+        <label style={labelStyle}>行事曆顏色</label>
+        <p style={hintStyle}>不選則使用分類預設</p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
           <button
             type="button"
             onClick={() => setCalendarColor(null)}
-            className={`w-8 h-8 rounded-lg border-2 text-xs transition-all hover:scale-110 ${
-              !calendarColor
-                ? "border-zinc-900 bg-zinc-100 ring-2 ring-zinc-300"
-                : "border-zinc-200 bg-zinc-50"
-            }`}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 6,
+              border: !calendarColor
+                ? "2px solid var(--admin-ink)"
+                : "2px solid var(--admin-border)",
+              background: !calendarColor
+                ? "var(--admin-ink-tint)"
+                : "var(--admin-bg-card)",
+              fontSize: 11,
+              cursor: "pointer",
+              color: "var(--admin-text-secondary)",
+              fontFamily: "inherit",
+            }}
             title="使用分類預設"
           >
             自動
@@ -296,37 +342,48 @@ export function CourseForm({
               type="button"
               title={c.name}
               onClick={() => setCalendarColor(c.value)}
-              className="relative w-8 h-8 rounded-lg border-2 transition-all hover:scale-110"
               style={{
+                position: "relative",
+                width: 32,
+                height: 32,
+                borderRadius: 6,
                 backgroundColor: c.value,
-                borderColor: calendarColor === c.value ? "#fff" : c.value,
-                boxShadow:
+                border:
                   calendarColor === c.value
-                    ? `0 0 0 2px ${c.value}`
-                    : undefined,
+                    ? "2px solid #fff"
+                    : `2px solid ${c.value}`,
+                boxShadow:
+                  calendarColor === c.value ? `0 0 0 2px ${c.value}` : undefined,
+                cursor: "pointer",
+                transition: "transform 0.15s ease",
               }}
             >
               {calendarColor === c.value && (
-                <Check className="absolute inset-0 m-auto w-4 h-4 text-white" />
+                <Check
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    margin: "auto",
+                    width: 14,
+                    height: 14,
+                    color: "#fff",
+                  }}
+                />
               )}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="flex gap-3 pt-4">
+      <div style={{ display: "flex", gap: 10, paddingTop: 8 }}>
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-lg bg-zinc-900 px-6 py-2.5 text-sm font-semibold text-white hover:bg-zinc-700 transition-colors disabled:cursor-not-allowed disabled:bg-zinc-400"
+          className="btn btn-primary"
         >
           {isSubmitting ? "儲存中..." : courseId ? "更新排程" : "建立排程"}
         </button>
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="rounded-lg border border-zinc-300 px-6 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
-        >
+        <button type="button" onClick={() => router.back()} className="btn">
           取消
         </button>
       </div>

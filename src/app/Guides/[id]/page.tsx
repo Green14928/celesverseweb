@@ -82,7 +82,7 @@ export default async function TeacherDetailPage({
 
             <div className="animate-float-up-delay space-y-6">
               <p className="text-[10px] uppercase tracking-[0.3em] font-sans font-light text-muted-fg">
-                Celesverse 導師
+                CELESVERSE 導師
               </p>
               <h1 className="text-5xl md:text-7xl font-serif font-light leading-tight">
                 {teacher.name}

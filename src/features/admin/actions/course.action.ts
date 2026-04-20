@@ -2,15 +2,17 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { sendPostponeEmail } from "@/lib/email";
 
 async function requireAdmin() {
-  const adminId = await getSession();
-  if (!adminId) redirect("/admin/login");
-  return adminId;
+  const session = await auth();
+  if (!session || session.user.userType !== "admin") {
+    redirect("/admin/login");
+  }
+  return session.user.id!;
 }
 
 export async function togglePublish(courseId: string) {
@@ -76,17 +78,21 @@ export async function postponeCourse(
   if (postponedTo) {
     const orderItems = await prisma.orderItem.findMany({
       where: { courseId },
-      include: { order: true },
+      include: {
+        order: {
+          include: { member: { select: { name: true, email: true } } },
+        },
+      },
     });
 
     const newDateStr = new Date(postponedTo).toLocaleDateString("zh-TW");
 
     for (const item of orderItems) {
-      if (item.order.orderStatus === "CANCELLED") continue;
+      if (item.order.status === "CANCELED") continue;
       try {
         await sendPostponeEmail({
-          buyerName: item.order.buyerName,
-          buyerEmail: item.order.buyerEmail,
+          buyerName: item.order.member.name,
+          buyerEmail: item.order.member.email,
           courseName: course.template.title,
           categoryName: course.template.category?.name,
           location: course.location ?? undefined,
@@ -95,7 +101,7 @@ export async function postponeCourse(
           note: note?.trim(),
         });
       } catch (err) {
-        console.error(`延期通知寄信失敗 (${item.order.buyerEmail}):`, err);
+        console.error(`延期通知寄信失敗 (${item.order.member.email}):`, err);
       }
     }
   }
@@ -140,7 +146,7 @@ export async function moveStudentToCourse(
       const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
       await tx.order.update({
         where: { id: orderItem.orderId },
-        data: { totalPrice: total },
+        data: { totalAmount: total },
       });
     }
 

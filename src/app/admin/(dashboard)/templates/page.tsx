@@ -23,95 +23,136 @@ export default async function TemplatesPage({
   const archivedCount = allTemplates.filter((t) => t.isArchived).length;
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-zinc-900">課程管理</h1>
-          <p className="mt-1 text-sm text-zinc-400">
-            建立可重複使用的課程模板，排課時自動帶入
-          </p>
+    <>
+      <div className="top-rail">
+        <div className="crumb">
+          <span>內容</span>
+          <span className="sep">/</span>
+          <span className="here">課程管理</span>
         </div>
-        <Link
-          href="/admin/templates/new"
-          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 transition-colors"
-        >
-          新增課程
-        </Link>
       </div>
 
-      {/* 分頁 */}
-      <div className="flex rounded-lg border border-zinc-200 overflow-hidden mb-6 w-fit">
-        <Link
-          href="/admin/templates?view=active"
-          className={`px-4 py-1.5 text-xs font-medium transition-colors ${
-            view === "active"
-              ? "bg-zinc-900 text-white"
-              : "text-zinc-500 hover:bg-zinc-50"
-          }`}
-        >
-          使用中（{activeCount}）
-        </Link>
-        <Link
-          href="/admin/templates?view=archived"
-          className={`px-4 py-1.5 text-xs font-medium transition-colors ${
-            view === "archived"
-              ? "bg-zinc-900 text-white"
-              : "text-zinc-500 hover:bg-zinc-50"
-          }`}
-        >
-          已封存（{archivedCount}）
-        </Link>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">課程管理</h1>
+          <div className="page-sub">Course Templates</div>
+        </div>
+        <div className="page-actions">
+          <Link href="/admin/templates/new" className="btn btn-primary">
+            + 新增課程
+          </Link>
+        </div>
       </div>
 
-      {templates.length === 0 ? (
-        <p className="py-12 text-center text-zinc-400">
-          {view === "archived" ? "沒有已封存的課程" : "尚無課程模板"}
-        </p>
-      ) : (
-        <div className="overflow-x-auto rounded-lg border border-zinc-200">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-zinc-200 text-zinc-500 bg-zinc-50">
+      <div className="panel">
+        <div className="filter-row">
+          <div className="filter-pills">
+            <Link
+              href="/admin/templates?view=active"
+              className={view === "active" ? "on" : ""}
+            >
+              使用中（{activeCount}）
+            </Link>
+            <Link
+              href="/admin/templates?view=archived"
+              className={view === "archived" ? "on" : ""}
+            >
+              已封存（{archivedCount}）
+            </Link>
+          </div>
+          <div className="filter-spacer" />
+          <div className="filter-count">
+            共 <span className="num">{templates.length}</span> 門
+          </div>
+        </div>
+
+        {templates.length === 0 ? (
+          <div style={{ padding: "60px 20px", textAlign: "center" }}>
+            <p className="muted">
+              {view === "archived" ? "沒有已封存的課程" : "尚無課程模板"}
+            </p>
+          </div>
+        ) : (
+          <table className="data-table">
+            <thead>
               <tr>
-                <th className="px-4 py-3 font-medium">圖片</th>
-                <th className="px-4 py-3 font-medium">課程名稱</th>
-                <th className="px-4 py-3 font-medium">分類</th>
-                <th className="px-4 py-3 font-medium">排程數</th>
-                <th className="px-4 py-3 font-medium">操作</th>
+                <th style={{ width: 72 }}>圖片</th>
+                <th>課程名稱</th>
+                <th>分類</th>
+                <th style={{ width: 100 }}>排程數</th>
+                <th style={{ width: 240 }}>操作</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody>
               {templates.map((tmpl) => (
-                <tr key={tmpl.id} className="hover:bg-zinc-50/50">
-                  <td className="px-4 py-3">
+                <tr key={tmpl.id}>
+                  <td>
                     {tmpl.images[0] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={tmpl.images[0].url}
                         alt={tmpl.title}
-                        className="w-12 h-12 object-cover rounded"
+                        style={{
+                          width: 48,
+                          height: 48,
+                          objectFit: "cover",
+                          borderRadius: 6,
+                        }}
                       />
                     ) : (
-                      <div className="w-12 h-12 bg-zinc-100 rounded flex items-center justify-center text-zinc-300 text-xs">
+                      <div
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 6,
+                          background: "var(--admin-bg-warm)",
+                          color: "var(--admin-text-muted)",
+                          display: "grid",
+                          placeItems: "center",
+                          fontSize: 10,
+                          letterSpacing: 1,
+                        }}
+                      >
                         無圖
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-3">
-                    <p className="text-zinc-900 font-medium">{tmpl.title}</p>
-                    <p className="text-xs text-zinc-400 line-clamp-1 mt-0.5">
+                  <td>
+                    <div style={{ fontWeight: 600 }}>{tmpl.title}</div>
+                    <div
+                      className="muted"
+                      style={{
+                        fontSize: 11,
+                        marginTop: 2,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        maxWidth: 520,
+                      }}
+                    >
                       {tmpl.description}
-                    </p>
+                    </div>
                   </td>
-                  <td className="px-4 py-3 text-zinc-500">
-                    {tmpl.category?.name || "—"}
+                  <td>
+                    {tmpl.category?.name ? (
+                      <span className="tag tag-neutral">{tmpl.category.name}</span>
+                    ) : (
+                      <span className="muted">—</span>
+                    )}
                   </td>
-                  <td className="px-4 py-3 text-zinc-500">
-                    {tmpl._count.courses} 門
+                  <td>
+                    <span className="serif-num" style={{ fontSize: 14 }}>
+                      {tmpl._count.courses}
+                    </span>
+                    <span className="muted" style={{ fontSize: 11, marginLeft: 3 }}>
+                      門
+                    </span>
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
+                  <td>
+                    <div className="ops">
                       <Link
                         href={`/admin/templates/${tmpl.id}/edit`}
-                        className="text-sm text-zinc-500 hover:text-zinc-700"
+                        className="op-btn"
                       >
                         編輯
                       </Link>
@@ -130,8 +171,8 @@ export default async function TemplatesPage({
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 }

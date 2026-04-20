@@ -1,83 +1,69 @@
-// 管理員登入頁
-"use client";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { SignInButton } from "@/features/admin/components/SignInButton";
+import { SignOutButton } from "@/features/admin/components/SignOutButton";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { login } from "@/features/admin/actions/auth.action";
+const ERROR_MESSAGES: Record<string, string> = {
+  AccessDenied: "此 Google 帳號不在管理員名單內，請聯絡 Amy 授權。",
+  Configuration: "登入設定有誤，請聯絡技術支援。",
+  Default: "登入失敗，請再試一次。",
+};
 
-export default function AdminLoginPage() {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-
-    const formData = new FormData(e.currentTarget);
-    const result = await login(
-      formData.get("email") as string,
-      formData.get("password") as string
-    );
-
-    if (result.success) {
-      router.push("/admin");
-      router.refresh();
-    } else {
-      setError(result.error);
-      setIsSubmitting(false);
-    }
+export default async function AdminLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string; error?: string }>;
+}) {
+  const sp = await searchParams;
+  const session = await auth();
+  if (session?.user.userType === "admin") {
+    redirect(sp.callbackUrl || "/admin");
   }
+
+  const loggedInAsMember = session?.user.userType === "member";
+  const errorMessage = sp.error
+    ? ERROR_MESSAGES[sp.error] ?? ERROR_MESSAGES.Default
+    : null;
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <h1 className="text-center text-2xl font-bold text-zinc-900">
-          管理後台登入
-        </h1>
+      <div className="w-full max-w-sm space-y-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-zinc-900">管理後台登入</h1>
+          <p className="mt-2 text-sm text-zinc-500">
+            使用已授權的 Google 帳號登入
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-          {error && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
-              {error}
+        {loggedInAsMember && (
+          <div className="rounded-lg bg-amber-50 p-4 text-sm text-amber-800">
+            <p className="font-medium">
+              你目前以會員（{session?.user.email}）身分登入，此帳號不是管理員。
+            </p>
+            <p className="mt-2 text-xs">
+              如果你是會員想買課 →{" "}
+              <Link href="/" className="font-semibold underline">
+                回首頁
+              </Link>
+              <br />
+              如果你要進後台 → 請先登出再以管理員 Google 帳號登入
+            </p>
+            <div className="mt-3">
+              <SignOutButton />
             </div>
-          )}
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-zinc-700">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-            />
           </div>
+        )}
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-zinc-700">
-              密碼
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-            />
+        {errorMessage && (
+          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+            {errorMessage}
           </div>
+        )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-lg bg-zinc-900 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-400"
-          >
-            {isSubmitting ? "登入中..." : "登入"}
-          </button>
-        </form>
+        {!loggedInAsMember && (
+          <SignInButton callbackUrl={sp.callbackUrl || "/admin"} />
+        )}
       </div>
     </div>
   );

@@ -8,7 +8,7 @@ export function Footer() {
         <div className="text-sm font-serif font-light">神仙部落有限公司</div>
 
         <div className="text-[10px] uppercase tracking-[0.3em] text-muted-fg font-sans">
-          &copy; {new Date().getFullYear()} CelesVerse
+          &copy; {new Date().getFullYear()} CELESVERSE
         </div>
 
         <div className="flex items-center gap-4">

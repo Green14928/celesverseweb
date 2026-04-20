@@ -1,42 +1,10 @@
-// 管理員驗證工具
-import { SignJWT, jwtVerify } from "jose";
-import { cookies } from "next/headers";
-
-const SECRET = new TextEncoder().encode(
-  process.env.ADMIN_JWT_SECRET || "dev-secret"
-);
-const COOKIE_NAME = "admin_session";
-
-export async function createSession(adminId: string) {
-  const token = await new SignJWT({ adminId })
-    .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime("7d")
-    .sign(SECRET);
-
-  const cookieStore = await cookies();
-  cookieStore.set(COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7, // 7 天
-    path: "/",
-  });
-}
+// 舊 Admin auth 相容層 — 底層改走 NextAuth v5
+// 所有 admin actions 呼叫 getSession() 時，這邊代為查詢 NextAuth session
+// 並回傳 adminId（保持舊簽章一致），不再需要自訂 JWT/Cookie
+import { auth } from "@/auth";
 
 export async function getSession(): Promise<string | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
-  if (!token) return null;
-
-  try {
-    const { payload } = await jwtVerify(token, SECRET);
-    return payload.adminId as string;
-  } catch {
-    return null;
-  }
-}
-
-export async function clearSession() {
-  const cookieStore = await cookies();
-  cookieStore.delete(COOKIE_NAME);
+  const session = await auth();
+  if (!session || session.user.userType !== "admin") return null;
+  return session.user.id;
 }

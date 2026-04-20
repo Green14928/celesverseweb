@@ -18,6 +18,22 @@ interface CourseTemplateFormProps {
   categories: Array<{ id: string; name: string }>;
 }
 
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  fontSize: 12,
+  fontWeight: 600,
+  marginBottom: 6,
+  letterSpacing: 0.5,
+};
+
+const hintStyle: React.CSSProperties = {
+  fontSize: 11,
+  color: "var(--admin-text-muted)",
+  marginTop: -4,
+  marginBottom: 8,
+  lineHeight: 1.6,
+};
+
 export function CourseTemplateForm({
   templateId,
   defaultValues,
@@ -107,62 +123,64 @@ export function CourseTemplateForm({
     }
   }
 
-  const inputClass =
-    "mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500";
-
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
+    <form
+      onSubmit={handleSubmit}
+      style={{ display: "flex", flexDirection: "column", gap: 20 }}
+    >
       {error && (
-        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+        <div
+          style={{
+            padding: "10px 14px",
+            borderRadius: 6,
+            background: "var(--admin-red-light)",
+            color: "var(--admin-red)",
+            fontSize: 13,
+            border: "1px solid rgba(192, 86, 75, 0.25)",
+          }}
+        >
           {error}
         </div>
       )}
 
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          課程名稱 *
-        </label>
+        <label style={labelStyle}>課程名稱 *</label>
         <input
           name="title"
           required
           defaultValue={defaultValues?.title}
-          className={inputClass}
+          style={{ width: "100%" }}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          課程簡介 *
-        </label>
+        <label style={labelStyle}>課程簡介 *</label>
         <textarea
           name="description"
           required
           rows={3}
           defaultValue={defaultValues?.description}
-          className={inputClass}
+          style={{ width: "100%", resize: "vertical" }}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          課程內容（詳細說明）
-        </label>
+        <label style={labelStyle}>課程內容（詳細說明）</label>
         <textarea
           name="content"
           rows={5}
           defaultValue={defaultValues?.content ?? ""}
-          className={inputClass}
+          style={{ width: "100%", resize: "vertical" }}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          分類
-        </label>
+        <label style={labelStyle}>分類</label>
         <select
           name="categoryId"
           defaultValue={defaultValues?.categoryId ?? ""}
-          className={inputClass}
+          className="select"
+          style={{ width: "100%" }}
         >
           <option value="">無分類</option>
           {categories.map((cat) => (
@@ -173,17 +191,14 @@ export function CourseTemplateForm({
         </select>
       </div>
 
-      {/* 多圖上傳 */}
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          課程圖片
-        </label>
-        <p className="text-xs text-zinc-400 mt-0.5 mb-2">
+        <label style={labelStyle}>課程圖片</label>
+        <p style={hintStyle}>
           可上傳多張，拖曳排序。第一張為封面圖。排課時自動帶入。
         </p>
-        <div className="mt-1 space-y-3">
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {images.length > 0 && (
-            <div className="flex flex-wrap gap-3">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
               {images.map((url, i) => (
                 <div
                   key={`${url}-${i}`}
@@ -191,28 +206,70 @@ export function CourseTemplateForm({
                   onDragStart={() => handleDragStart(i)}
                   onDragOver={(e) => handleDragOver(e, i)}
                   onDragEnd={handleDragEnd}
-                  className={`relative w-28 aspect-[4/5] rounded-lg overflow-hidden border-2 cursor-grab active:cursor-grabbing transition-all ${
-                    dragIndex === i
-                      ? "border-zinc-400 opacity-50"
-                      : i === 0
-                        ? "border-gold-dust"
-                        : "border-zinc-200"
-                  }`}
+                  style={{
+                    position: "relative",
+                    width: 112,
+                    aspectRatio: "4/5",
+                    borderRadius: 8,
+                    overflow: "hidden",
+                    border:
+                      dragIndex === i
+                        ? "2px solid var(--admin-text-muted)"
+                        : i === 0
+                          ? "2px solid var(--admin-accent)"
+                          : "2px solid var(--admin-border)",
+                    opacity: dragIndex === i ? 0.5 : 1,
+                    cursor: "grab",
+                    transition: "border-color 0.2s ease",
+                  }}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={url}
                     alt={`圖片 ${i + 1}`}
-                    className="w-full h-full object-cover pointer-events-none"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      pointerEvents: "none",
+                    }}
                   />
                   {i === 0 && (
-                    <span className="absolute top-1 left-1 bg-gold-dust text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
+                    <span
+                      style={{
+                        position: "absolute",
+                        top: 4,
+                        left: 4,
+                        background: "var(--admin-accent)",
+                        color: "var(--admin-bg-card)",
+                        fontSize: 10,
+                        padding: "2px 6px",
+                        borderRadius: 3,
+                        fontWeight: 600,
+                        letterSpacing: 0.5,
+                      }}
+                    >
                       封面
                     </span>
                   )}
                   <button
                     type="button"
                     onClick={() => removeImage(i)}
-                    className="absolute top-1 right-1 w-6 h-6 bg-zinc-900/70 text-white rounded-full text-xs flex items-center justify-center hover:bg-zinc-900"
+                    style={{
+                      position: "absolute",
+                      top: 4,
+                      right: 4,
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      background: "rgba(26, 24, 22, 0.75)",
+                      color: "#fff",
+                      border: "none",
+                      fontSize: 11,
+                      cursor: "pointer",
+                      display: "grid",
+                      placeItems: "center",
+                    }}
                   >
                     ✕
                   </button>
@@ -227,19 +284,21 @@ export function CourseTemplateForm({
             multiple
             onChange={handleImageUpload}
             disabled={uploading}
-            className="block w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-zinc-100 file:text-zinc-700 hover:file:bg-zinc-200 disabled:opacity-50"
+            style={{ fontSize: 12, color: "var(--admin-text-muted)" }}
           />
           {uploading && (
-            <p className="text-xs text-zinc-400">上傳中...</p>
+            <p style={{ fontSize: 11, color: "var(--admin-text-muted)" }}>
+              上傳中...
+            </p>
           )}
         </div>
       </div>
 
-      <div className="flex gap-3 pt-4">
+      <div style={{ display: "flex", gap: 10, paddingTop: 8 }}>
         <button
           type="submit"
           disabled={isSubmitting || uploading}
-          className="rounded-lg bg-zinc-900 px-6 py-2.5 text-sm font-semibold text-white hover:bg-zinc-700 transition-colors disabled:cursor-not-allowed disabled:bg-zinc-400"
+          className="btn btn-primary"
         >
           {isSubmitting
             ? "儲存中..."
@@ -247,11 +306,7 @@ export function CourseTemplateForm({
               ? "更新模板"
               : "建立模板"}
         </button>
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="rounded-lg border border-zinc-300 px-6 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
-        >
+        <button type="button" onClick={() => router.back()} className="btn">
           取消
         </button>
       </div>

@@ -25,7 +25,7 @@ export function ArchiveTemplateButton({
     <button
       onClick={handleToggle}
       disabled={loading}
-      className="text-sm text-zinc-500 hover:text-zinc-700 disabled:opacity-50"
+      className="op-btn"
     >
       {isArchived ? "取消封存" : "封存"}
     </button>

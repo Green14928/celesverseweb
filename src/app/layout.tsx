@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { PublicChrome } from "@/components/layout/PublicChrome";
 
 export const metadata: Metadata = {
   title: "CELESVERSE",
@@ -16,9 +17,13 @@ export default function RootLayout({
   return (
     <html lang="zh-Hant" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
-        <Header />
+        <PublicChrome>
+          <Header />
+        </PublicChrome>
         <main className="flex-1">{children}</main>
-        <Footer />
+        <PublicChrome>
+          <Footer />
+        </PublicChrome>
       </body>
     </html>
   );

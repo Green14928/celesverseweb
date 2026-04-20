@@ -9,6 +9,10 @@ datasource db {
   provider = "postgresql"
 }
 
+// ============================================
+// 課程系統（原本就有）
+// ============================================
+
 // 課程模板（可重複使用的課程定義）
 model CourseTemplate {
   id          String   @id @default(cuid())
@@ -101,34 +105,139 @@ model SiteContent {
   updatedAt DateTime @updatedAt
 }
 
-// 訂單
+// ============================================
+// 會員系統
+// ============================================
+
+// 前台會員（Google 登入）
+model Member {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  googleSub String?  @unique // Google OAuth 不變 ID
+
+  // 會員資料（Google 登入時先拿 name，其他由補資料頁填寫）
+  name     String    // Google 登入時自動帶入
+  gender   Gender?   // 補資料時填
+  birthday DateTime? // 補資料時填
+  phone    String?   // 補資料時填
+  address  String?   // 補資料時填
+  lineId   String?   // 手填 LINE ID（非登入用）
+
+  // 狀態
+  isActive           Boolean   @default(true)
+  profileCompletedAt DateTime? // 首次補完資料時間，null = 還沒補
+
+  // LINE 官方帳號推廣彈窗相關
+  lineOfficialAddedAt  DateTime? // 用戶標記已加官方好友的時間
+  linePromoDismissedAt DateTime? // 上次滑掉彈窗的時間（控制跳多久彈一次）
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastLoginAt DateTime?
+
+  orders Order[]
+
+  @@index([email])
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+// ============================================
+// 管理員系統（Google 登入 + 白名單）
+// ============================================
+
+model Admin {
+  id        String  @id @default(cuid())
+  email     String  @unique // Google email，同時充當白名單
+  name      String
+  googleSub String? @unique // Google OAuth 不變 ID（首次登入寫入）
+
+  role     AdminRole @default(ADMIN)
+  isActive Boolean   @default(true)
+
+  lastLoginAt DateTime?
+  createdById String? // 誰新增這個管理員
+  createdBy   Admin?   @relation("AdminCreator", fields: [createdById], references: [id])
+  createdAdmins Admin[] @relation("AdminCreator")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 反向關聯
+  voidedInvoices Invoice[] @relation("InvoiceVoidedBy")
+}
+
+enum AdminRole {
+  SUPER_ADMIN // 只有最高管理員可新增/停用其他管理員
+  ADMIN       // 一般管理員
+}
+
+// ============================================
+// 訂單系統
+// ============================================
+
 model Order {
-  id         String      @id @default(cuid())
-  buyerName  String
-  buyerEmail String
-  buyerPhone String?
-  totalPrice     Int
-  paymentStatus  PaymentStatus @default(PENDING)
-  orderStatus    OrderStatus   @default(CONFIRMED)
-  note           String?
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id          String @id @default(cuid())
+  orderNumber String @unique // 人類可讀，例：CV20260420-0001
 
-  items OrderItem[]
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id])
 
+  totalAmount Int // 含稅總金額（新台幣元）
+
+  // 付款
+  paymentMethod        PaymentMethod?
+  paymentStatus        PaymentStatus  @default(PENDING)
+  ecpayMerchantTradeNo String?        @unique // 我方給綠界的訂單號
+  ecpayTradeNo         String? // 綠界回傳的交易號
+  paidAt               DateTime?
+
+  // 發票（下單時收集）
+  invoiceType        InvoiceType         @default(B2C)
+  invoiceCarrierType InvoiceCarrierType?
+  invoiceCarrierCode String? // 載具條碼內容（例：/ABC1234）
+  invoiceBuyerName   String? // 三聯式：公司抬頭
+  invoiceBuyerTaxId  String? // 三聯式：統編
+  invoiceDonateCode  String? // 捐贈：愛心碼
+  invoiceEmail       String? // 發票寄送信箱
+
+  // 退費追蹤（管理員手動勾選）
+  refundRequestedAt  DateTime?
+  isCanceled         Boolean   @default(false) // ☐ 已取消
+  isRefunded         Boolean   @default(false) // ☐ 已退費（綠界刷退完）
+  isInvoiceVoided    Boolean   @default(false) // ☐ 發票已作廢
+  refundCompletedAt  DateTime? // 三者皆勾時寫入
+  refundEmailSentAt  DateTime? // 退費完成通知信已寄出（避免重複寄）
+  refundNote         String?
+
+  // 整體狀態
+  status OrderStatus @default(PENDING)
+  note   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items    OrderItem[]
+  invoices Invoice[]
+
+  @@index([memberId])
+  @@index([status])
   @@index([paymentStatus])
-  @@index([orderStatus])
-  @@index([buyerEmail])
+  @@index([createdAt])
 }
 
 // 訂單項目
 model OrderItem {
   id       String @id @default(cuid())
   quantity Int    @default(1)
-  price    Int
+  price    Int // 下單當時的單價
 
   orderId  String
-  order    Order  @relation(fields: [orderId], references: [id])
+  order    Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
   courseId String
   course   Course @relation(fields: [courseId], references: [id])
 
@@ -136,24 +245,88 @@ model OrderItem {
   @@index([courseId])
 }
 
-// 管理員帳號
-model Admin {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  createdAt DateTime @default(now())
+enum PaymentMethod {
+  CREDIT_CARD
+  APPLE_PAY
 }
 
 enum PaymentStatus {
   PENDING
   PAID
-  REFUNDED
+  FAILED
 }
 
 enum OrderStatus {
-  CONFIRMED
-  PREPARING
-  COMPLETED
-  CANCELLED
+  PENDING        // 建立未付款
+  PAID           // 付款成功
+  REFUND_PENDING // 管理員已發起退費流程（但 3 勾未齊）
+  REFUNDED       // 退費完成（3 勾齊）
+  CANCELED       // 直接取消（未付款就取消）
+}
+
+// ============================================
+// 發票系統（綠界電子發票）
+// ============================================
+
+model Invoice {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  invoiceNumber String   @unique // 綠界發票號碼
+  invoiceDate   DateTime
+  type          InvoiceType
+  status        InvoiceStatus @default(ISSUED)
+
+  // 金額
+  amount      Int // 未稅金額
+  taxAmount   Int // 稅額
+  totalAmount Int // 含稅金額
+
+  // 買方資訊
+  buyerName   String
+  buyerTaxId  String? // 三聯式用
+  buyerEmail  String?
+  carrierType InvoiceCarrierType?
+  carrierCode String?
+  donateCode  String?
+
+  // 綠界回傳原始資料（JSON，備查用）
+  ecpayResponse Json?
+
+  // 作廢 / 重開
+  voidedAt      DateTime?
+  voidReason    String?
+  voidedById    String?
+  voidedBy      Admin?   @relation("InvoiceVoidedBy", fields: [voidedById], references: [id])
+
+  originalInvoiceId String?
+  originalInvoice   Invoice?  @relation("InvoiceReissue", fields: [originalInvoiceId], references: [id])
+  reissuedInvoices  Invoice[] @relation("InvoiceReissue")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+  @@index([invoiceDate])
+}
+
+enum InvoiceType {
+  B2C // 二聯式（個人）
+  B2B // 三聯式（公司）
+}
+
+enum InvoiceStatus {
+  ISSUED    // 已開立
+  VOIDED    // 已作廢
+  ALLOWANCE // 已折讓
+}
+
+enum InvoiceCarrierType {
+  NONE           // 紙本 / 無載具
+  MEMBER         // 會員載具（系統的）
+  MOBILE_BARCODE // 手機條碼 /XXXXXXX
+  CITIZEN_CARD   // 自然人憑證
+  DONATION       // 捐贈
 }

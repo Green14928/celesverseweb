@@ -37,7 +37,7 @@ export function DeleteTemplateButton({
     <button
       onClick={handleDelete}
       disabled={loading}
-      className="text-sm text-red-400 hover:text-red-600 disabled:opacity-50"
+      className="op-btn danger"
     >
       刪除
     </button>

@@ -19,7 +19,7 @@ export function HeroSection() {
             >
               <div className="w-12 h-px bg-foreground/20" />
               <span className="text-xs tracking-[0.3em] text-foreground/60 font-medium uppercase font-sans">
-                Celesverse · 靈性探索
+                CELESVERSE · 靈性探索
               </span>
             </motion.div>
 
