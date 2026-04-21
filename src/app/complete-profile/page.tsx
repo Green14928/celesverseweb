@@ -26,9 +26,9 @@ export default async function CompleteProfilePage({
     redirect("/login");
   }
 
-  // 已補完資料就跳走（除非是從「編輯資料」進來，那應該去 /account）
+  // 已補完資料就跳走
   if (member.profileCompletedAt) {
-    redirect(sp.callbackUrl || "/account");
+    redirect(sp.callbackUrl || "/");
   }
 
   return (
@@ -50,7 +50,7 @@ export default async function CompleteProfilePage({
           address: member.address,
           lineId: member.lineId,
         }}
-        successRedirect={sp.callbackUrl || "/account"}
+        successRedirect={sp.callbackUrl || "/"}
       />
     </div>
   );

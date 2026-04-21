@@ -18,7 +18,7 @@ export default async function LoginPage({
 }) {
   const sp = await searchParams;
   const session = await auth();
-  const callbackUrl = sp.callbackUrl || "/account";
+  const callbackUrl = sp.callbackUrl || "/";
 
   if (session?.user.userType === "member") {
     redirect(callbackUrl);

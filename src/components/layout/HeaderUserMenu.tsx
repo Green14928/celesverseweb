@@ -77,7 +77,7 @@ export function HeaderUserMenu({ userType, userName }: Props) {
                 className="block px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
                 onClick={() => setOpen(false)}
               >
-                我的訂單
+                過往訂單
               </Link>
               <div className="my-1 border-t border-zinc-100" />
               <MemberSignOutButton

@@ -44,15 +44,48 @@ export function CourseTemplateForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [images, setImages] = useState<string[]>(existingImages ?? []);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [contentUploading, setContentUploading] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const contentInputRef = useRef<HTMLInputElement>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  // images[0] = 封面；images[1..] = 內容圖
+  const coverImage = images[0] ?? null;
+  const contentImages = images.slice(1);
+
+  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setCoverUploading(true);
+    setError(null);
+
+    try {
+      const url = await uploadImage(file);
+      setImages((prev) => {
+        if (prev.length === 0) return [url];
+        const next = [...prev];
+        next[0] = url;
+        return next;
+      });
+    } catch {
+      setError("封面上傳失敗，請稍後再試");
+    }
+
+    setCoverUploading(false);
+    if (coverInputRef.current) coverInputRef.current.value = "";
+  }
+
+  function removeCover() {
+    setImages((prev) => prev.slice(1));
+  }
+
+  async function handleContentUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    setUploading(true);
+    setContentUploading(true);
     setError(null);
 
     const newUrls: string[] = [];
@@ -61,35 +94,43 @@ export function CourseTemplateForm({
         const url = await uploadImage(file);
         newUrls.push(url);
       } catch {
-        setError("上傳失敗，請稍後再試");
+        setError("內容圖片上傳失敗，請稍後再試");
       }
     }
 
     if (newUrls.length > 0) {
-      setImages((prev) => [...prev, ...newUrls]);
+      setImages((prev) => {
+        // 還沒有封面時，第一張新圖當封面
+        if (prev.length === 0) return newUrls;
+        return [...prev, ...newUrls];
+      });
     }
-    setUploading(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    setContentUploading(false);
+    if (contentInputRef.current) contentInputRef.current.value = "";
   }
 
-  function removeImage(index: number) {
-    setImages((prev) => prev.filter((_, i) => i !== index));
+  function removeContentImage(contentIndex: number) {
+    // contentIndex 是 contentImages 的 index，對應到 images 的 index = contentIndex + 1
+    const realIndex = contentIndex + 1;
+    setImages((prev) => prev.filter((_, i) => i !== realIndex));
   }
 
-  function handleDragStart(index: number) {
-    setDragIndex(index);
+  function handleDragStart(contentIndex: number) {
+    setDragIndex(contentIndex);
   }
 
-  function handleDragOver(e: React.DragEvent, index: number) {
+  function handleDragOver(e: React.DragEvent, contentIndex: number) {
     e.preventDefault();
-    if (dragIndex === null || dragIndex === index) return;
+    if (dragIndex === null || dragIndex === contentIndex) return;
     setImages((prev) => {
-      const next = [...prev];
+      // 只在 contentImages（prev[1..]）之間搬移，不動封面 prev[0]
+      const content = prev.slice(1);
+      const next = [...content];
       const [moved] = next.splice(dragIndex, 1);
-      next.splice(index, 0, moved);
-      return next;
+      next.splice(contentIndex, 0, moved);
+      return [prev[0], ...next];
     });
-    setDragIndex(index);
+    setDragIndex(contentIndex);
   }
 
   function handleDragEnd() {
@@ -191,15 +232,112 @@ export function CourseTemplateForm({
         </select>
       </div>
 
+      {/* 課程封面 — 單張大圖，顯示在課程頁最上方 */}
       <div>
-        <label style={labelStyle}>課程圖片</label>
+        <label style={labelStyle}>課程封面</label>
         <p style={hintStyle}>
-          可上傳多張，拖曳排序。第一張為封面圖。排課時自動帶入。
+          單張封面圖，會放在課程頁最上方的大 banner。建議用橫向構圖。
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {coverImage ? (
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                maxWidth: 480,
+                aspectRatio: "16/9",
+                borderRadius: 8,
+                overflow: "hidden",
+                border: "2px solid var(--admin-accent)",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={coverImage}
+                alt="封面"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+              <span
+                style={{
+                  position: "absolute",
+                  top: 8,
+                  left: 8,
+                  background: "var(--admin-accent)",
+                  color: "var(--admin-bg-card)",
+                  fontSize: 11,
+                  padding: "3px 8px",
+                  borderRadius: 3,
+                  fontWeight: 600,
+                  letterSpacing: 0.5,
+                }}
+              >
+                封面
+              </span>
+              <button
+                type="button"
+                onClick={removeCover}
+                style={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  width: 26,
+                  height: 26,
+                  borderRadius: "50%",
+                  background: "rgba(26, 24, 22, 0.75)",
+                  color: "#fff",
+                  border: "none",
+                  fontSize: 12,
+                  cursor: "pointer",
+                  display: "grid",
+                  placeItems: "center",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <div
+              style={{
+                width: "100%",
+                maxWidth: 480,
+                aspectRatio: "16/9",
+                borderRadius: 8,
+                border: "2px dashed var(--admin-border)",
+                display: "grid",
+                placeItems: "center",
+                color: "var(--admin-text-muted)",
+                fontSize: 13,
+              }}
+            >
+              尚未上傳封面
+            </div>
+          )}
+          <input
+            ref={coverInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={handleCoverUpload}
+            disabled={coverUploading}
+            style={{ fontSize: 12, color: "var(--admin-text-muted)" }}
+          />
+          {coverUploading && (
+            <p style={{ fontSize: 11, color: "var(--admin-text-muted)" }}>
+              封面上傳中...
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* 課程內容圖片 — 多張，會接在說明欄下方一張張往下滾 */}
+      <div>
+        <label style={labelStyle}>課程內容圖片</label>
+        <p style={hintStyle}>
+          可上傳多張，拖曳排序。會接在「關於這門課」說明下方，一張接一張往下顯示（電商長頁）。
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {images.length > 0 && (
+          {contentImages.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-              {images.map((url, i) => (
+              {contentImages.map((url, i) => (
                 <div
                   key={`${url}-${i}`}
                   draggable
@@ -215,9 +353,7 @@ export function CourseTemplateForm({
                     border:
                       dragIndex === i
                         ? "2px solid var(--admin-text-muted)"
-                        : i === 0
-                          ? "2px solid var(--admin-accent)"
-                          : "2px solid var(--admin-border)",
+                        : "2px solid var(--admin-border)",
                     opacity: dragIndex === i ? 0.5 : 1,
                     cursor: "grab",
                     transition: "border-color 0.2s ease",
@@ -226,7 +362,7 @@ export function CourseTemplateForm({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={url}
-                    alt={`圖片 ${i + 1}`}
+                    alt={`內容圖 ${i + 1}`}
                     style={{
                       width: "100%",
                       height: "100%",
@@ -234,27 +370,24 @@ export function CourseTemplateForm({
                       pointerEvents: "none",
                     }}
                   />
-                  {i === 0 && (
-                    <span
-                      style={{
-                        position: "absolute",
-                        top: 4,
-                        left: 4,
-                        background: "var(--admin-accent)",
-                        color: "var(--admin-bg-card)",
-                        fontSize: 10,
-                        padding: "2px 6px",
-                        borderRadius: 3,
-                        fontWeight: 600,
-                        letterSpacing: 0.5,
-                      }}
-                    >
-                      封面
-                    </span>
-                  )}
+                  <span
+                    style={{
+                      position: "absolute",
+                      bottom: 4,
+                      left: 4,
+                      background: "rgba(26, 24, 22, 0.75)",
+                      color: "#fff",
+                      fontSize: 10,
+                      padding: "2px 6px",
+                      borderRadius: 3,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {i + 1}
+                  </span>
                   <button
                     type="button"
-                    onClick={() => removeImage(i)}
+                    onClick={() => removeContentImage(i)}
                     style={{
                       position: "absolute",
                       top: 4,
@@ -278,15 +411,15 @@ export function CourseTemplateForm({
             </div>
           )}
           <input
-            ref={fileInputRef}
+            ref={contentInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp,image/gif"
             multiple
-            onChange={handleImageUpload}
-            disabled={uploading}
+            onChange={handleContentUpload}
+            disabled={contentUploading}
             style={{ fontSize: 12, color: "var(--admin-text-muted)" }}
           />
-          {uploading && (
+          {contentUploading && (
             <p style={{ fontSize: 11, color: "var(--admin-text-muted)" }}>
               上傳中...
             </p>
@@ -297,7 +430,7 @@ export function CourseTemplateForm({
       <div style={{ display: "flex", gap: 10, paddingTop: 8 }}>
         <button
           type="submit"
-          disabled={isSubmitting || uploading}
+          disabled={isSubmitting || coverUploading || contentUploading}
           className="btn btn-primary"
         >
           {isSubmitting
