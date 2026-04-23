@@ -196,11 +196,18 @@ export async function createOrder(
           },
         });
 
-        // 暫時扣庫存（付款失敗 / 取消時要再加回來，放在 return/client-return API 處理）
-        await tx.course.update({
-          where: { id: input.courseId },
-          data: { soldCount: { increment: 1 } },
-        });
+        // 用單一 SQL 條件更新避免最後名額被同時搶到而超賣
+        const reservedRows = await tx.$queryRaw<Array<{ id: string }>>`
+          UPDATE "Course"
+          SET "soldCount" = "soldCount" + 1
+          WHERE "id" = ${input.courseId}
+            AND "isPublished" = true
+            AND "soldCount" < "totalSlots"
+          RETURNING "id"
+        `;
+        if (reservedRows.length === 0) {
+          throw new Error("此課程已額滿，無法報名");
+        }
 
         return {
           orderId: order.id,

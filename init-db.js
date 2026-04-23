@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // Runtime DB init: detect schema mismatch, force-reset only when legacy enum exists.
 // After first successful reset, subsequent boots fall back to safe `prisma db push`.
 const { Client } = require("pg");

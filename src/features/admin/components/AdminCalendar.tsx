@@ -157,22 +157,24 @@ export function AdminCalendar({ courses, legendItems }: AdminCalendarProps) {
   const handleChipClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>, course: CalendarCourse) => {
       e.stopPropagation();
-      setSelectedCourseId((prev) => (prev === course.id ? null : course.id));
+      const nextSelectedCourseId =
+        selectedCourseId === course.id ? null : course.id;
+      setSelectedCourseId(nextSelectedCourseId);
       if (!cellsRef.current) return;
       const rect = e.currentTarget.getBoundingClientRect();
       const container = cellsRef.current.getBoundingClientRect();
+      if (!nextSelectedCourseId) {
+        setPopover(null);
+        return;
+      }
       setPopover({
         course,
         x: rect.left - container.left,
         y: rect.bottom - container.top + 6,
       });
     },
-    [],
+    [selectedCourseId],
   );
-
-  useEffect(() => {
-    if (!selectedCourseId) setPopover(null);
-  }, [selectedCourseId]);
 
   useEffect(() => {
     const onDocDown = (e: MouseEvent) => {

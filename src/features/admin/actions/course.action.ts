@@ -15,6 +15,57 @@ async function requireAdmin() {
   return session.user.id!;
 }
 
+async function moveOrderItemInTx(
+  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
+  orderItemId: string,
+  fromCourseId: string,
+  toCourseId: string,
+) {
+  if (fromCourseId === toCourseId) {
+    throw new Error("來源課程和目標課程不能相同");
+  }
+
+  const orderItem = await tx.orderItem.findUnique({
+    where: { id: orderItemId },
+    select: {
+      id: true,
+      courseId: true,
+      quantity: true,
+      orderId: true,
+    },
+  });
+  if (!orderItem) throw new Error("找不到要移動的報名資料");
+  if (orderItem.courseId !== fromCourseId) {
+    throw new Error("原課程資料已變動，請重新整理後再試");
+  }
+
+  const targetCourse = await tx.course.findUnique({
+    where: { id: toCourseId },
+    select: { id: true, price: true },
+  });
+  if (!targetCourse) throw new Error("目標課程不存在");
+
+  await tx.orderItem.update({
+    where: { id: orderItemId },
+    data: {
+      courseId: toCourseId,
+      price: targetCourse.price,
+    },
+  });
+
+  const items = await tx.orderItem.findMany({
+    where: { orderId: orderItem.orderId },
+    select: { price: true, quantity: true },
+  });
+  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  await tx.order.update({
+    where: { id: orderItem.orderId },
+    data: { totalAmount: total },
+  });
+
+  return orderItem.quantity;
+}
+
 export async function togglePublish(courseId: string) {
   await requireAdmin();
 
@@ -33,8 +84,11 @@ export async function togglePublish(courseId: string) {
 export async function deleteCourse(courseId: string) {
   await requireAdmin();
 
-  // 先刪除關聯的訂單項目
-  await prisma.orderItem.deleteMany({ where: { courseId } });
+  const relatedOrderCount = await prisma.orderItem.count({ where: { courseId } });
+  if (relatedOrderCount > 0) {
+    throw new Error("這門課已經有報名紀錄，不能直接刪除。請改成下架保留歷史資料。");
+  }
+
   await prisma.course.delete({ where: { id: courseId } });
 
   revalidatePath("/admin");
@@ -121,43 +175,22 @@ export async function moveStudentToCourse(
   await prisma.$transaction(async (tx) => {
     const targetCourse = await tx.course.findUnique({
       where: { id: toCourseId },
+      select: { totalSlots: true, soldCount: true },
     });
     if (!targetCourse) throw new Error("目標課程不存在");
 
+    const quantity = await moveOrderItemInTx(tx, orderItemId, fromCourseId, toCourseId);
     const remaining = targetCourse.totalSlots - targetCourse.soldCount;
-    if (remaining <= 0) throw new Error("目標課程已額滿");
-
-    await tx.orderItem.update({
-      where: { id: orderItemId },
-      data: {
-        courseId: toCourseId,
-        price: targetCourse.price,
-      },
-    });
-
-    const orderItem = await tx.orderItem.findUnique({
-      where: { id: orderItemId },
-      select: { orderId: true },
-    });
-    if (orderItem) {
-      const items = await tx.orderItem.findMany({
-        where: { orderId: orderItem.orderId },
-      });
-      const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-      await tx.order.update({
-        where: { id: orderItem.orderId },
-        data: { totalAmount: total },
-      });
-    }
+    if (remaining < quantity) throw new Error("目標課程已額滿");
 
     await tx.course.update({
       where: { id: fromCourseId },
-      data: { soldCount: { decrement: 1 } },
+      data: { soldCount: { decrement: quantity } },
     });
 
     await tx.course.update({
       where: { id: toCourseId },
-      data: { soldCount: { increment: 1 } },
+      data: { soldCount: { increment: quantity } },
     });
   });
 
@@ -176,9 +209,44 @@ export async function moveStudentsToCourse(
   await requireAdmin();
 
   try {
-    for (const itemId of orderItemIds) {
-      await moveStudentToCourse(itemId, fromCourseId, toCourseId);
-    }
+    await prisma.$transaction(async (tx) => {
+      const targetCourse = await tx.course.findUnique({
+        where: { id: toCourseId },
+        select: { totalSlots: true, soldCount: true },
+      });
+      if (!targetCourse) throw new Error("目標課程不存在");
+
+      const orderItems = await tx.orderItem.findMany({
+        where: { id: { in: orderItemIds } },
+        select: { id: true, courseId: true, quantity: true },
+      });
+      if (orderItems.length !== orderItemIds.length) {
+        throw new Error("部分報名資料不存在，請重新整理後再試");
+      }
+      if (orderItems.some((item) => item.courseId !== fromCourseId)) {
+        throw new Error("有學生已不在原課程，請重新整理後再試");
+      }
+
+      const totalQuantity = orderItems.reduce((sum, item) => sum + item.quantity, 0);
+      const remaining = targetCourse.totalSlots - targetCourse.soldCount;
+      if (remaining < totalQuantity) {
+        throw new Error(`目標課程只剩 ${remaining} 個名額`);
+      }
+
+      for (const itemId of orderItemIds) {
+        await moveOrderItemInTx(tx, itemId, fromCourseId, toCourseId);
+      }
+
+      await tx.course.update({
+        where: { id: fromCourseId },
+        data: { soldCount: { decrement: totalQuantity } },
+      });
+      await tx.course.update({
+        where: { id: toCourseId },
+        data: { soldCount: { increment: totalQuantity } },
+      });
+    });
+
     return { success: true };
   } catch (e) {
     return {

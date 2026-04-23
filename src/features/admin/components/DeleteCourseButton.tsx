@@ -15,7 +15,13 @@ export function DeleteCourseButton({
 
   function handleDelete() {
     if (!confirm(`確定要刪除「${courseName}」嗎？此操作無法復原。`)) return;
-    startTransition(() => deleteCourse(courseId));
+    startTransition(async () => {
+      try {
+        await deleteCourse(courseId);
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "刪除失敗");
+      }
+    });
   }
 
   return (

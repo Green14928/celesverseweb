@@ -84,7 +84,7 @@ export async function handleEcpayPaymentCallback(
     const firstItem = order.items[0];
     const itemTitle = firstItem?.course.template.title ?? "CELESVERSE 課程";
 
-    let carrierType: "NONE" | "MEMBER" | "MOBILE_BARCODE" | "CITIZEN_CARD" | "DONATION" =
+    const carrierType: "NONE" | "MEMBER" | "MOBILE_BARCODE" | "CITIZEN_CARD" | "DONATION" =
       (order.invoiceCarrierType as typeof carrierType) ?? "NONE";
     const isDonation = carrierType === "DONATION";
 
