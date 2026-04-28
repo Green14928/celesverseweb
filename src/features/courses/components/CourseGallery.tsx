@@ -39,7 +39,6 @@ export function CourseGallery({ images, title }: CourseGalleryProps) {
             alt={title}
             fill
             sizes="(min-width: 1024px) 40vw, calc(100vw - 48px)"
-            unoptimized
             className="w-full h-full object-cover"
           />
         </div>
@@ -69,7 +68,6 @@ export function CourseGallery({ images, title }: CourseGalleryProps) {
           alt={`${title} - ${activeIndex + 1}`}
           fill
           sizes="(min-width: 1024px) 40vw, calc(100vw - 48px)"
-          unoptimized
           className="w-full h-full object-cover transition-opacity duration-500"
         />
       </div>
@@ -92,7 +90,6 @@ export function CourseGallery({ images, title }: CourseGalleryProps) {
               width={64}
               height={64}
               sizes="64px"
-              unoptimized
               className="w-full h-full object-cover"
             />
           </button>
@@ -168,7 +165,6 @@ function Lightbox({
         width={1600}
         height={1200}
         sizes="90vw"
-        unoptimized
         className="max-h-[85vh] max-w-[90vw] object-contain"
         onClick={(e) => e.stopPropagation()}
       />

@@ -40,6 +40,7 @@ export default async function AccountProfilePage() {
         mode="edit"
         initial={{
           name: member.name,
+          email: member.email,
           gender: member.gender,
           birthday: member.birthday,
           phone: member.phone,

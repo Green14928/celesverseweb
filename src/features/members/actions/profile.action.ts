@@ -17,6 +17,7 @@ async function requireMember() {
 
 export type ProfileFormData = {
   name: string;
+  email?: string;
   gender: Gender;
   birthday: string; // YYYY-MM-DD
   phone: string;
@@ -30,6 +31,11 @@ export type ProfileActionResult =
 
 function validate(data: ProfileFormData): string | null {
   if (!data.name.trim()) return "請填姓名";
+  if (data.email !== undefined) {
+    const email = data.email.trim().toLowerCase();
+    if (!email) return "請填 Email";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Email 格式不對";
+  }
   if (!["MALE", "FEMALE", "OTHER"].includes(data.gender)) return "性別欄位不對";
   if (!data.birthday || isNaN(Date.parse(data.birthday))) return "生日格式不對";
   if (!data.phone.trim()) return "請填電話";
@@ -72,11 +78,29 @@ export async function updateProfile(
   const err = validate(data);
   if (err) return { success: false, error: err };
 
+  const email = data.email?.trim().toLowerCase();
+  if (email) {
+    const existing = await prisma.member.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+    if (existing && existing.id !== memberId) {
+      return { success: false, error: "這個 Email 已經被其他會員使用" };
+    }
+  }
+
+  const current = await prisma.member.findUnique({
+    where: { id: memberId },
+    select: { gender: true },
+  });
+  if (!current) return { success: false, error: "會員資料不存在" };
+
   await prisma.member.update({
     where: { id: memberId },
     data: {
       name: data.name.trim(),
-      gender: data.gender,
+      ...(email ? { email } : {}),
+      gender: current.gender ?? data.gender,
       birthday: new Date(data.birthday),
       phone: data.phone.trim(),
       address: data.address.trim(),

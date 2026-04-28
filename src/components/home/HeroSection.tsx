@@ -83,7 +83,7 @@ export function HeroSection() {
               {/* 圖片 */}
               <div className="absolute inset-0 bg-mist overflow-hidden">
                 <Image
-                  src="/images/hero-forest.png"
+                  src="/images/hero-forest.webp"
                   alt="Hero"
                   fill
                   sizes="(min-width: 768px) 40vw, calc(100vw - 112px)"

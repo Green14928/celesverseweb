@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { auth } from "@/auth";
 import { HeaderUserMenu } from "@/components/layout/HeaderUserMenu";
+import { ContactModalButton } from "@/components/layout/ContactModalButton";
 
 export async function Header() {
   const session = await auth();
@@ -22,9 +23,15 @@ export async function Header() {
         />
       </Link>
 
-      <div className="hidden md:flex gap-12 text-sm tracking-widest uppercase font-light font-sans absolute left-1/2 -translate-x-1/2">
+      <div className="hidden md:flex gap-8 lg:gap-12 text-sm tracking-widest uppercase font-light font-sans absolute left-1/2 -translate-x-1/2">
         <Link href="/" className="hover:text-gold-dust transition-colors duration-500">
           首頁
+        </Link>
+        <Link
+          href="/about"
+          className="hover:text-gold-dust transition-colors duration-500"
+        >
+          在部落裡
         </Link>
         <Link
           href="/experiences"
@@ -38,6 +45,7 @@ export async function Header() {
         >
           靈性嚮導
         </Link>
+        <ContactModalButton />
       </div>
 
       <div className="ml-auto relative z-10">

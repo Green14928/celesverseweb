@@ -11,6 +11,7 @@ import {
 
 type Initial = {
   name: string;
+  email?: string;
   gender: Gender | null;
   birthday: Date | null;
   phone: string | null;
@@ -32,6 +33,12 @@ function toDateInputValue(d: Date | null): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+const GENDER_LABEL: Record<Gender, string> = {
+  FEMALE: "女性",
+  MALE: "男性",
+  OTHER: "其他 / 不透露",
+};
+
 export function ProfileForm({ mode, initial, successRedirect }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -45,6 +52,7 @@ export function ProfileForm({ mode, initial, successRedirect }: Props) {
     const fd = new FormData(e.currentTarget);
     const data: ProfileFormData = {
       name: fd.get("name") as string,
+      email: (fd.get("email") as string) || undefined,
       gender: fd.get("gender") as Gender,
       birthday: fd.get("birthday") as string,
       phone: fd.get("phone") as string,
@@ -95,23 +103,47 @@ export function ProfileForm({ mode, initial, successRedirect }: Props) {
         />
       </div>
 
+      {mode === "edit" && (
+        <div>
+          <label className="block text-sm font-medium text-zinc-700">
+            Email <span className="text-red-500">*</span>
+          </label>
+          <input
+            name="email"
+            type="email"
+            required
+            defaultValue={initial.email ?? ""}
+            className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+          />
+        </div>
+      )}
+
       <div>
         <label className="block text-sm font-medium text-zinc-700">
           性別 <span className="text-red-500">*</span>
         </label>
-        <select
-          name="gender"
-          required
-          defaultValue={initial.gender ?? ""}
-          className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-        >
-          <option value="" disabled>
-            請選擇
-          </option>
-          <option value="FEMALE">女性</option>
-          <option value="MALE">男性</option>
-          <option value="OTHER">其他 / 不透露</option>
-        </select>
+        {mode === "edit" && initial.gender ? (
+          <>
+            <input type="hidden" name="gender" value={initial.gender} />
+            <div className="mt-1 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500">
+              {GENDER_LABEL[initial.gender]}
+            </div>
+          </>
+        ) : (
+          <select
+            name="gender"
+            required
+            defaultValue={initial.gender ?? ""}
+            className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+          >
+            <option value="" disabled>
+              請選擇
+            </option>
+            <option value="FEMALE">女性</option>
+            <option value="MALE">男性</option>
+            <option value="OTHER">其他 / 不透露</option>
+          </select>
+        )}
       </div>
 
       <div>

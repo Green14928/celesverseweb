@@ -7,6 +7,7 @@ type IconKind =
   | "calendar"
   | "course"
   | "pending"
+  | "popup"
   | "teacher"
   | "order"
   | "invoice"
@@ -47,6 +48,14 @@ function NavIcon({ kind }: { kind: IconKind }) {
           <path d="M6.2 7h3.6M6.2 9.5h2.2" />
           <path d="M11 10.5l1.8 1.8" />
           <circle cx="10.2" cy="9.7" r="1.7" />
+        </svg>
+      );
+    case "popup":
+      return (
+        <svg {...common}>
+          <rect x="2.5" y="3.5" width="11" height="9" rx="1.3" />
+          <path d="M5 6.2h6M5 8.5h4" />
+          <path d="M6.2 12.5L4.8 14M9.8 12.5l1.4 1.5" />
         </svg>
       );
     case "teacher":
@@ -109,6 +118,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/admin", label: "課程行事曆", icon: "calendar", match: "/admin" },
       { href: "/admin/templates", label: "課程管理", icon: "course" },
       { href: "/admin/pending-students", label: "待安排學員", icon: "pending" },
+      { href: "/admin/popup", label: "彈跳視窗", icon: "popup" },
       { href: "/admin/teachers", label: "導師管理", icon: "teacher" },
     ],
   },

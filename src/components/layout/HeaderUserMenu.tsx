@@ -72,13 +72,6 @@ export function HeaderUserMenu({ userType, userName }: Props) {
               >
                 會員中心
               </Link>
-              <Link
-                href="/account/orders"
-                className="block px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
-                onClick={() => setOpen(false)}
-              >
-                過往訂單
-              </Link>
               <div className="my-1 border-t border-zinc-100" />
               <MemberSignOutButton
                 className="w-full px-4 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50"

@@ -33,7 +33,6 @@ export function TeacherCard({
             alt={name}
             fill
             sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, calc(100vw - 48px)"
-            unoptimized
             className="w-full h-full object-cover mix-blend-multiply opacity-90 group-hover:scale-105 group-hover:opacity-100 group-hover:mix-blend-normal transition-all duration-1000"
           />
         ) : (

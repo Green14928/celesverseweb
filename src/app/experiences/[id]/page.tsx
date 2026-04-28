@@ -65,7 +65,6 @@ export default async function CourseDetailPage({
                     width={1200}
                     height={900}
                     sizes="(min-width: 1024px) 50vw, calc(100vw - 48px)"
-                    unoptimized
                     className="w-full h-auto object-cover aspect-[4/3] bg-mist"
                   />
                 ) : (
@@ -100,7 +99,6 @@ export default async function CourseDetailPage({
                         width={56}
                         height={56}
                         sizes="56px"
-                        unoptimized
                         className="w-14 h-14 object-cover mix-blend-multiply opacity-90 flex-shrink-0"
                       />
                     ) : (
@@ -205,7 +203,6 @@ export default async function CourseDetailPage({
                   width={1330}
                   height={900}
                   sizes="(min-width: 768px) 1330px, 100vw"
-                  unoptimized
                   className="w-full h-auto block"
                 />
               ))}

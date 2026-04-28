@@ -6,7 +6,7 @@ import Image from "next/image";
 
 const sections = [
   {
-    image: "/images/philosophy/philosophy-1.jpg",
+    image: "/images/philosophy/philosophy-1.webp",
     alt: "林間小路",
     quote: true,
     text: `我們不會停止探索，而我們一切探索的終點，\n就是要抵達我們的起點，並第一次認識那裡。`,
@@ -14,25 +14,25 @@ const sections = [
     imagePosition: "right" as const,
   },
   {
-    image: "/images/philosophy/philosophy-2.jpg",
+    image: "/images/philosophy/philosophy-2.webp",
     alt: "溪水漫步",
     text: `練習，是回到本來的過程，與失聯的渴望重新聯繫。\n專注於內心的和平，讓呼吸成為心靈的開關。`,
     imagePosition: "left" as const,
   },
   {
-    image: "/images/philosophy/philosophy-3.jpg",
+    image: "/images/philosophy/philosophy-3.webp",
     alt: "自然中靜觀",
     text: `你會有那麼多想法，是因為你真的熱愛生命。\n那一閃一閃的靈感、那些跳動不已的念頭，\n是內在能量，正在流動的證明。`,
     imagePosition: "right" as const,
   },
   {
-    image: "/images/philosophy/philosophy-4.jpg",
+    image: "/images/philosophy/philosophy-4.webp",
     alt: "赤足大地",
     text: `在自在中修習平靜，讓喧囂的思緒慢慢安靜。\n當此刻來臨，創造與安寧不再矛盾，兩者都是你的一部分。`,
     imagePosition: "left" as const,
   },
   {
-    image: "/images/philosophy/philosophy-5.jpg",
+    image: "/images/philosophy/philosophy-5.webp",
     alt: "山嵐雲光",
     text: `靜默，讓人與人之間，有了不需言語的親密。\n只要在場，只要相遇，就已經足夠了。\n自由，其實一直都在心裡。\n而創造力，是你靈魂在自由中跳舞的樣子。`,
     imagePosition: "right" as const,

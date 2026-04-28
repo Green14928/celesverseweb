@@ -6,6 +6,12 @@ import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
+const invoiceStatusLabel: Record<string, string> = {
+  ISSUED: "已開立",
+  VOIDED: "已作廢",
+  ALLOWANCE: "已折讓",
+};
+
 export default async function OrderSuccessPage({
   params,
 }: {
@@ -19,7 +25,7 @@ export default async function OrderSuccessPage({
     include: {
       member: true,
       items: { include: { course: { include: { template: true } } } },
-      invoices: true,
+      invoices: { orderBy: { createdAt: "desc" } },
     },
   });
 
@@ -122,12 +128,15 @@ export default async function OrderSuccessPage({
           </div>
 
           {/* 發票資訊 */}
-          {invoice && (
-            <>
-              <div className="h-px bg-foreground/15" />
-              <div className="space-y-5">
-                <h2 className="text-xl font-serif font-light">電子發票</h2>
-                <dl className="grid grid-cols-[120px_1fr] gap-y-4 text-sm font-sans">
+          <div className="h-px bg-foreground/15" />
+          <div className="space-y-5">
+            <h2 className="text-xl font-serif font-light">電子發票</h2>
+            <dl className="grid grid-cols-[120px_1fr] gap-y-4 text-sm font-sans">
+              <dt className="text-muted-fg">開立狀態</dt>
+              <dd>{invoice ? invoiceStatusLabel[invoice.status] ?? invoice.status : "尚未開立"}</dd>
+
+              {invoice ? (
+                <>
                   <dt className="text-muted-fg">發票號碼</dt>
                   <dd className="font-mono">{invoice.invoiceNumber}</dd>
 
@@ -160,32 +169,26 @@ export default async function OrderSuccessPage({
                       <dd className="font-mono">{invoice.donateCode}</dd>
                     </>
                   )}
-                </dl>
-              </div>
-            </>
-          )}
+                </>
+              ) : (
+                <>
+                  <dt className="text-muted-fg">發票號碼</dt>
+                  <dd>—</dd>
+
+                  <dt className="text-muted-fg">發票 Email</dt>
+                  <dd>{order.invoiceEmail ?? order.member.email}</dd>
+                </>
+              )}
+            </dl>
+          </div>
 
           <div className="flex flex-wrap gap-4 pt-6">
             <Link
               href="/account"
               className="px-8 py-3 bg-foreground text-background text-sm tracking-widest uppercase hover:bg-moss transition-colors font-sans"
             >
-              會員中心
+              回到會員中心
             </Link>
-            <Link
-              href="/experiences"
-              className="px-8 py-3 border border-border text-foreground text-sm tracking-widest uppercase hover:bg-mist transition-colors font-sans"
-            >
-              繼續探索
-            </Link>
-            {isFailed && (
-              <Link
-                href={firstItem ? `/experiences/${firstItem.courseId}` : "/experiences"}
-                className="px-8 py-3 bg-gold-dust text-background text-sm tracking-widest uppercase hover:opacity-80 transition-opacity font-sans"
-              >
-                再次下單
-              </Link>
-            )}
           </div>
         </div>
       </div>

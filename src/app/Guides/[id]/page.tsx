@@ -71,7 +71,6 @@ export default async function TeacherDetailPage({
                     alt={teacher.name}
                     fill
                     sizes="(min-width: 768px) 448px, calc(100vw - 48px)"
-                    unoptimized
                     className="w-full h-full object-cover mix-blend-multiply opacity-90"
                   />
                 ) : (
