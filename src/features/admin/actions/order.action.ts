@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { sendRefundCompletedEmail } from "@/lib/email";
+import type { OrderStatus } from "@/generated/prisma/enums";
 
 async function requireAdmin() {
   const session = await auth();
@@ -14,7 +15,7 @@ async function requireAdmin() {
   return session.user.id!;
 }
 
-/** 更新退費勾選 — 三個 checkbox 全勾 → refundCompletedAt + status=REFUNDED */
+/** 更新退費勾選 — 三個 checkbox 全勾 → refundCompletedAt + paymentStatus=REFUNDED */
 export async function updateRefundFlags(
   orderId: string,
   flags: {
@@ -49,6 +50,13 @@ export async function updateRefundFlags(
   if (!order) return;
 
   const emailAlreadySent = order.refundEmailSentAt !== null;
+  const isLegacyRefundStatus =
+    order.status === "REFUNDED" || order.status === "REFUND_PENDING";
+  const shouldRestoreOrderStatus =
+    isLegacyRefundStatus ||
+    (order.status === "CANCELED" &&
+      (order.paymentStatus === "REFUNDED" ||
+        order.paymentStatus === "REFUND_PENDING"));
 
   await prisma.order.update({
     where: { id: orderId },
@@ -62,15 +70,21 @@ export async function updateRefundFlags(
       refundRequestedAt: anyChecked
         ? (order.refundRequestedAt ?? new Date())
         : null,
-      status: allChecked
+      paymentStatus: allChecked
         ? "REFUNDED"
         : anyChecked
           ? "REFUND_PENDING"
-          : order.status === "REFUNDED" || order.status === "REFUND_PENDING"
-            ? order.paymentStatus === "PAID"
+          : order.paymentStatus === "REFUNDED" ||
+              order.paymentStatus === "REFUND_PENDING"
+            ? order.paidAt
               ? "PAID"
               : "PENDING"
-            : order.status,
+            : order.paymentStatus,
+      status: flags.isCanceled
+        ? "CANCELED"
+        : shouldRestoreOrderStatus
+          ? "PREPARING"
+          : order.status,
     },
   });
 
@@ -168,6 +182,22 @@ export async function updateOrderNote(orderId: string, note: string) {
     where: { id: orderId },
     data: { note: note.trim() || null },
   });
+  revalidatePath(`/admin/orders/${orderId}`);
+}
+
+/** 更新訂單處理狀態 */
+export async function updateOrderStatus(orderId: string, status: string) {
+  await requireAdmin();
+
+  const allowed: OrderStatus[] = ["PREPARING", "COMPLETED", "CANCELED"];
+  if (!allowed.includes(status as OrderStatus)) return;
+
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { status: status as OrderStatus },
+  });
+
+  revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
 }
 

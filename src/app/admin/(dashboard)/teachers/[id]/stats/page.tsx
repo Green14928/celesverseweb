@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { isActivePaidOrder } from "@/lib/order-labels";
 import { MonthPicker } from "@/features/admin/components/MonthPicker";
 import { Suspense } from "react";
 
@@ -52,16 +53,8 @@ export default async function TeacherStatsPage({
     },
   });
 
-  function isCountable(order: { paymentStatus: string; status: string }): boolean {
-    return (
-      order.paymentStatus === "PAID" &&
-      order.status !== "REFUNDED" &&
-      order.status !== "CANCELED"
-    );
-  }
-
   const courseStats = courses.map((c) => {
-    const validItems = c.orders.filter((i) => isCountable(i.order));
+    const validItems = c.orders.filter((i) => isActivePaidOrder(i.order));
     const studentCount = validItems.reduce((sum, i) => sum + i.quantity, 0);
     const revenue = validItems.reduce(
       (sum, i) => sum + i.price * i.quantity,
@@ -115,7 +108,7 @@ export default async function TeacherStatsPage({
     let revenue = 0;
     for (const c of monthCourses) {
       for (const item of c.orders) {
-        if (isCountable(item.order)) {
+        if (isActivePaidOrder(item.order)) {
           students += item.quantity;
           revenue += item.price * item.quantity;
         }

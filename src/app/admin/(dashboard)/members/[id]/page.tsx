@@ -2,22 +2,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { isActivePaidOrder, orderStatusLabel, paymentLabel } from "@/lib/order-labels";
 
 export const dynamic = "force-dynamic";
-
-const paymentLabel: Record<string, { text: string; cls: string }> = {
-  PENDING: { text: "待付款", cls: "tag-amber" },
-  PAID: { text: "已付款", cls: "tag-green" },
-  FAILED: { text: "付款失敗", cls: "tag-red" },
-};
-
-const statusLabel: Record<string, { text: string; cls: string }> = {
-  PENDING: { text: "待付款", cls: "tag-amber" },
-  PAID: { text: "已付款", cls: "tag-green" },
-  REFUND_PENDING: { text: "退費處理中", cls: "tag-amber" },
-  REFUNDED: { text: "已退費", cls: "tag-purple" },
-  CANCELED: { text: "已取消", cls: "tag-neutral" },
-};
 
 export default async function AdminMemberDetailPage({
   params,
@@ -44,7 +31,7 @@ export default async function AdminMemberDetailPage({
 
   if (!member) notFound();
 
-  const paidOrders = member.orders.filter((o) => o.paymentStatus === "PAID");
+  const paidOrders = member.orders.filter(isActivePaidOrder);
   const totalSpent = paidOrders.reduce((sum, o) => sum + o.totalAmount, 0);
 
   return (
@@ -198,7 +185,8 @@ export default async function AdminMemberDetailPage({
                 {member.orders.map((order) => {
                   const payment =
                     paymentLabel[order.paymentStatus] ?? paymentLabel.PENDING;
-                  const status = statusLabel[order.status] ?? statusLabel.PENDING;
+                  const status =
+                    orderStatusLabel[order.status] ?? orderStatusLabel.PREPARING;
                   return (
                     <Link
                       key={order.id}

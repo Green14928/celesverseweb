@@ -3,10 +3,6 @@
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useCallback, useRef } from "react";
 
-const CURRENT_YEAR = new Date().getFullYear();
-const YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - i);
-const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
-
 export function OrderFilters() {
   const router = useRouter();
   const pathname = usePathname();
@@ -14,9 +10,17 @@ export function OrderFilters() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentSearch = searchParams.get("search") || "";
-  const currentYear = searchParams.get("year") || "";
-  const currentMonth = searchParams.get("month") || "";
-  const hasDateFilter = currentYear !== "" && currentMonth !== "";
+  const currentStartDate = searchParams.get("startDate") || "";
+  const currentEndDate = searchParams.get("endDate") || "";
+  const currentPaymentStatus = searchParams.get("paymentStatus") || "";
+  const currentOrderStatus = searchParams.get("status") || "";
+  const currentInvoiceStatus = searchParams.get("invoice") || "";
+  const hasAdvancedFilter =
+    currentStartDate !== "" ||
+    currentEndDate !== "" ||
+    currentPaymentStatus !== "" ||
+    currentOrderStatus !== "" ||
+    currentInvoiceStatus !== "";
 
   const updateParams = useCallback(
     (updates: Record<string, string>) => {
@@ -40,99 +44,112 @@ export function OrderFilters() {
     }, 300);
   }
 
-  function applyDateFilter(year: string, month: string) {
-    if (year && month) {
-      updateParams({ year, month });
-    }
-  }
-
-  function clearDateFilter() {
-    updateParams({ year: "", month: "" });
+  function clearAdvancedFilters() {
+    updateParams({
+      startDate: "",
+      endDate: "",
+      paymentStatus: "",
+      status: "",
+      invoice: "",
+    });
   }
 
   function handleExport() {
     const params = new URLSearchParams();
     if (currentSearch) params.set("search", currentSearch);
-    if (hasDateFilter) {
-      params.set(
-        "month",
-        `${currentYear}-${String(Number(currentMonth)).padStart(2, "0")}`,
-      );
-    }
+    if (currentStartDate) params.set("startDate", currentStartDate);
+    if (currentEndDate) params.set("endDate", currentEndDate);
+    if (currentPaymentStatus) params.set("paymentStatus", currentPaymentStatus);
+    if (currentOrderStatus) params.set("status", currentOrderStatus);
+    if (currentInvoiceStatus) params.set("invoice", currentInvoiceStatus);
     window.open(`/api/orders/export?${params.toString()}`, "_blank");
   }
 
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
-      <input
-        className="search-input"
-        defaultValue={currentSearch}
-        onChange={(e) => handleSearchChange(e.target.value)}
-        placeholder="搜尋訂單編號、會員姓名、Email、電話…"
-        style={{ minWidth: 260 }}
-      />
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+        <input
+          className="search-input"
+          defaultValue={currentSearch}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          placeholder="搜尋訂單編號、會員姓名、Email、電話…"
+          style={{ minWidth: 260, flex: "1 1 280px" }}
+        />
 
-      <select
-        className="select"
-        value={currentYear}
-        onChange={(e) => {
-          const y = e.target.value;
-          if (y) {
-            applyDateFilter(
-              y,
-              currentMonth ||
-                String(
-                  CURRENT_YEAR === Number(y)
-                    ? new Date().getMonth() + 1
-                    : 1,
-                ),
-            );
-          } else {
-            clearDateFilter();
-          }
-        }}
-      >
-        <option value="">全部年份</option>
-        {YEARS.map((y) => (
-          <option key={y} value={y}>
-            {y} 年
-          </option>
-        ))}
-      </select>
-
-      <select
-        className="select"
-        value={currentMonth}
-        onChange={(e) => {
-          const m = e.target.value;
-          if (m) {
-            applyDateFilter(currentYear || String(CURRENT_YEAR), m);
-          } else {
-            clearDateFilter();
-          }
-        }}
-      >
-        <option value="">全部月份</option>
-        {MONTHS.map((m) => (
-          <option key={m} value={m}>
-            {m} 月
-          </option>
-        ))}
-      </select>
-
-      {hasDateFilter && (
-        <button
-          onClick={clearDateFilter}
-          className="btn btn-ghost btn-sm"
-          type="button"
-        >
-          清除日期
+        <button onClick={handleExport} className="btn btn-sm" type="button">
+          匯出 CSV
         </button>
-      )}
+      </div>
 
-      <button onClick={handleExport} className="btn btn-sm" type="button">
-        匯出 CSV
-      </button>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "end", gap: 10 }}>
+        <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          <span className="caption">起始日期</span>
+          <input
+            type="date"
+            value={currentStartDate}
+            onChange={(e) => updateParams({ startDate: e.target.value })}
+          />
+        </label>
+        <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          <span className="caption">結束日期</span>
+          <input
+            type="date"
+            value={currentEndDate}
+            onChange={(e) => updateParams({ endDate: e.target.value })}
+          />
+        </label>
+        <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          <span className="caption">付款狀態</span>
+          <select
+            className="select"
+            value={currentPaymentStatus}
+            onChange={(e) => updateParams({ paymentStatus: e.target.value })}
+          >
+            <option value="">全部付款</option>
+            <option value="PENDING">待付款</option>
+            <option value="PAID">已付款</option>
+            <option value="FAILED">付款失敗</option>
+            <option value="REFUND_PENDING">退費處理中</option>
+            <option value="REFUNDED">已退費</option>
+          </select>
+        </label>
+        <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          <span className="caption">訂單狀態</span>
+          <select
+            className="select"
+            value={currentOrderStatus}
+            onChange={(e) => updateParams({ status: e.target.value })}
+          >
+            <option value="">全部狀態</option>
+            <option value="PREPARING">準備中</option>
+            <option value="COMPLETED">已完成</option>
+            <option value="CANCELED">已取消</option>
+          </select>
+        </label>
+        <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          <span className="caption">發票</span>
+          <select
+            className="select"
+            value={currentInvoiceStatus}
+            onChange={(e) => updateParams({ invoice: e.target.value })}
+          >
+            <option value="">全部發票</option>
+            <option value="ISSUED">已開立</option>
+            <option value="UNISSUED">未開立</option>
+            <option value="VOIDED">已作廢</option>
+          </select>
+        </label>
+
+        {hasAdvancedFilter && (
+          <button
+            onClick={clearAdvancedFilters}
+            className="btn btn-ghost btn-sm"
+            type="button"
+          >
+            清除篩選
+          </button>
+        )}
+      </div>
     </div>
   );
 }

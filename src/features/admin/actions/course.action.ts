@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { sendPostponeEmail } from "@/lib/email";
+import { isCanceledOrder } from "@/lib/order-labels";
 
 async function requireAdmin() {
   const session = await auth();
@@ -142,7 +143,7 @@ export async function postponeCourse(
     const newDateStr = new Date(postponedTo).toLocaleDateString("zh-TW");
 
     for (const item of orderItems) {
-      if (item.order.status === "CANCELED") continue;
+      if (isCanceledOrder(item.order.status)) continue;
       try {
         await sendPostponeEmail({
           buyerName: item.order.member.name,
@@ -195,6 +196,7 @@ export async function moveStudentToCourse(
   });
 
   revalidatePath("/admin");
+  revalidatePath("/admin/pending-students");
   revalidatePath(`/admin/courses/${fromCourseId}`);
   revalidatePath(`/admin/courses/${toCourseId}`);
   revalidatePath("/");
@@ -280,7 +282,6 @@ interface CourseFormData {
   totalSlots: number;
   location?: string;
   calendarColor?: string;
-  paymentLink?: string;
   startDate?: string;
   endDate?: string;
 }
@@ -310,7 +311,6 @@ export async function saveCourse(
       totalSlots: data.totalSlots,
       location: data.location?.trim() || null,
       calendarColor: data.calendarColor?.trim() || null,
-      paymentLink: data.paymentLink?.trim() || null,
       startDate: data.startDate ? new Date(data.startDate) : null,
       endDate: data.endDate ? new Date(data.endDate) : null,
     };

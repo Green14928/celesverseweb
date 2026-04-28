@@ -5,34 +5,11 @@ import { prisma } from "@/lib/prisma";
 import { getCourseStatus, courseStatusLabels } from "@/lib/course-status";
 import { InlineMoveButton } from "@/features/admin/components/InlineMoveButton";
 import { DuplicateCourseButton } from "@/features/admin/components/DuplicateCourseButton";
-
-const paymentTag: Record<string, string> = {
-  PENDING: "tag-amber",
-  PAID: "tag-green",
-  FAILED: "tag-red",
-};
-
-const statusTag: Record<string, string> = {
-  PENDING: "tag-amber",
-  PAID: "tag-green",
-  REFUND_PENDING: "tag-amber",
-  REFUNDED: "tag-purple",
-  CANCELED: "tag-neutral",
-};
-
-const paymentText: Record<string, string> = {
-  PENDING: "待付款",
-  PAID: "已付款",
-  FAILED: "付款失敗",
-};
-
-const statusText: Record<string, string> = {
-  PENDING: "待付款",
-  PAID: "已付款",
-  REFUND_PENDING: "退費處理中",
-  REFUNDED: "已退費",
-  CANCELED: "已取消",
-};
+import {
+  isCanceledOrder,
+  orderStatusLabel,
+  paymentLabel,
+} from "@/lib/order-labels";
 
 const courseStatusTag: Record<string, string> = {
   unscheduled: "tag-neutral",
@@ -96,8 +73,8 @@ export default async function CourseDetailAdminPage({
 
   const paidCount = orderItems.filter((i) => i.order.paymentStatus === "PAID").length;
   const pendingCount = orderItems.filter((i) => i.order.paymentStatus === "PENDING").length;
-  const canceledCount = orderItems.filter((i) => i.order.status === "CANCELED").length;
-  const refundedCount = orderItems.filter((i) => i.order.status === "REFUNDED").length;
+  const canceledCount = orderItems.filter((i) => isCanceledOrder(i.order.status)).length;
+  const refundedCount = orderItems.filter((i) => i.order.paymentStatus === "REFUNDED").length;
 
   return (
     <>
@@ -270,9 +247,11 @@ export default async function CourseDetailAdminPage({
             </thead>
             <tbody>
               {orderItems.map((item) => {
-                const pTag = paymentTag[item.order.paymentStatus] ?? "tag-amber";
-                const sTag = statusTag[item.order.status] ?? "tag-amber";
-                const isCanceled = item.order.status === "CANCELED";
+                const payment =
+                  paymentLabel[item.order.paymentStatus] ?? paymentLabel.PENDING;
+                const status =
+                  orderStatusLabel[item.order.status] ?? orderStatusLabel.PREPARING;
+                const isCanceled = isCanceledOrder(item.order.status);
                 return (
                   <tr key={item.id}>
                     <td>
@@ -293,13 +272,13 @@ export default async function CourseDetailAdminPage({
                       </span>
                     </td>
                     <td>
-                      <span className={`tag ${pTag}`}>
-                        {paymentText[item.order.paymentStatus] ?? "待付款"}
+                      <span className={`tag ${payment.cls}`}>
+                        {payment.text}
                       </span>
                     </td>
                     <td>
-                      <span className={`tag ${sTag}`}>
-                        {statusText[item.order.status] ?? "待付款"}
+                      <span className={`tag ${status.cls}`}>
+                        {status.text}
                       </span>
                     </td>
                     <td className="muted" style={{ whiteSpace: "nowrap" }}>

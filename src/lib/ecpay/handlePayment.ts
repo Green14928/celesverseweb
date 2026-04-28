@@ -73,7 +73,7 @@ export async function handleEcpayPaymentCallback(
     where: { id: order.id },
     data: {
       paymentStatus: "PAID",
-      status: "PAID",
+      status: "PREPARING",
       paidAt: new Date(),
       ecpayTradeNo: tradeNo,
     },

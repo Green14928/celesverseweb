@@ -5,22 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { RefundCheckboxes } from "@/features/admin/components/RefundCheckboxes";
 import { OrderNoteField } from "@/features/admin/components/OrderNoteField";
 import { InvoiceActions } from "@/features/admin/components/InvoiceActions";
+import { OrderStatusSelect } from "@/features/admin/components/OrderStatusSelect";
+import { orderStatusLabel, paymentLabel } from "@/lib/order-labels";
 
 export const dynamic = "force-dynamic";
-
-const paymentLabel: Record<string, { text: string; cls: string }> = {
-  PENDING: { text: "待付款", cls: "tag-amber" },
-  PAID: { text: "已付款", cls: "tag-green" },
-  FAILED: { text: "付款失敗", cls: "tag-red" },
-};
-
-const statusLabel: Record<string, { text: string; cls: string }> = {
-  PENDING: { text: "待付款", cls: "tag-amber" },
-  PAID: { text: "已付款", cls: "tag-green" },
-  REFUND_PENDING: { text: "退費處理中", cls: "tag-amber" },
-  REFUNDED: { text: "已退費", cls: "tag-purple" },
-  CANCELED: { text: "已取消", cls: "tag-neutral" },
-};
 
 const invoiceTypeLabel: Record<string, string> = {
   B2C: "二聯式（個人）",
@@ -81,7 +69,7 @@ export default async function AdminOrderDetailPage({
   if (!order) notFound();
 
   const payment = paymentLabel[order.paymentStatus] ?? paymentLabel.PENDING;
-  const status = statusLabel[order.status] ?? statusLabel.PENDING;
+  const status = orderStatusLabel[order.status] ?? orderStatusLabel.PREPARING;
 
   return (
     <>
@@ -493,6 +481,16 @@ export default async function AdminOrderDetailPage({
 
         {/* 右欄：退費 3 勾勾 + 備註 */}
         <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
+          <div className="panel">
+            <div className="panel-head">
+              <h2 className="panel-title">訂單處理</h2>
+              <span className="panel-en">ORDER</span>
+            </div>
+            <div className="panel-body">
+              <OrderStatusSelect orderId={order.id} initialStatus={order.status} />
+            </div>
+          </div>
+
           <RefundCheckboxes
             orderId={order.id}
             initial={{

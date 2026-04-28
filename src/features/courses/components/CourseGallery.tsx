@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 interface CourseGalleryProps {
   images: string[];
@@ -15,7 +16,7 @@ export function CourseGallery({ images, title }: CourseGalleryProps) {
   // 沒有圖片時顯示 placeholder
   if (images.length === 0) {
     return (
-      <div className="aspect-[4/5] bg-mist overflow-hidden shadow-[var(--shadow-soft)] sticky top-32">
+      <div className="aspect-[4/5] bg-mist overflow-hidden shadow-soft sticky top-32">
         <div className="w-full h-full bg-gradient-to-br from-mist via-background to-gold-dust/20 flex items-center justify-center">
           <span className="text-8xl font-serif font-light text-muted-fg/20">
             {title.charAt(0)}
@@ -30,12 +31,15 @@ export function CourseGallery({ images, title }: CourseGalleryProps) {
     return (
       <div className="sticky top-32">
         <div
-          className="aspect-[4/5] bg-mist overflow-hidden shadow-[var(--shadow-soft)] cursor-zoom-in"
+          className="relative aspect-[4/5] bg-mist overflow-hidden shadow-soft cursor-zoom-in"
           onClick={() => setLightboxOpen(true)}
         >
-          <img
+          <Image
             src={images[0]}
             alt={title}
+            fill
+            sizes="(min-width: 1024px) 40vw, calc(100vw - 48px)"
+            unoptimized
             className="w-full h-full object-cover"
           />
         </div>
@@ -57,12 +61,15 @@ export function CourseGallery({ images, title }: CourseGalleryProps) {
     <div className="sticky top-32 space-y-3">
       {/* 主圖 */}
       <div
-        className="aspect-[4/5] bg-mist overflow-hidden shadow-[var(--shadow-soft)] cursor-zoom-in"
+        className="relative aspect-[4/5] bg-mist overflow-hidden shadow-soft cursor-zoom-in"
         onClick={() => setLightboxOpen(true)}
       >
-        <img
+        <Image
           src={images[activeIndex]}
           alt={`${title} - ${activeIndex + 1}`}
+          fill
+          sizes="(min-width: 1024px) 40vw, calc(100vw - 48px)"
+          unoptimized
           className="w-full h-full object-cover transition-opacity duration-500"
         />
       </div>
@@ -79,9 +86,13 @@ export function CourseGallery({ images, title }: CourseGalleryProps) {
                 : "border-transparent opacity-60 hover:opacity-100"
             }`}
           >
-            <img
+            <Image
               src={url}
               alt={`${title} - 縮圖 ${i + 1}`}
+              width={64}
+              height={64}
+              sizes="64px"
+              unoptimized
               className="w-full h-full object-cover"
             />
           </button>
@@ -151,9 +162,13 @@ function Lightbox({
       )}
 
       {/* 圖片 */}
-      <img
+      <Image
         src={images[activeIndex]}
         alt=""
+        width={1600}
+        height={1200}
+        sizes="90vw"
+        unoptimized
         className="max-h-[85vh] max-w-[90vw] object-contain"
         onClick={(e) => e.stopPropagation()}
       />

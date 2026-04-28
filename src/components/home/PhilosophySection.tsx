@@ -2,6 +2,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 const sections = [
   {
@@ -40,10 +41,8 @@ const sections = [
 
 function PhilosophyBlock({
   section,
-  index,
 }: {
   section: (typeof sections)[0];
-  index: number;
 }) {
   const isImageRight = section.imagePosition === "right";
 
@@ -102,9 +101,11 @@ function PhilosophyBlock({
 
               {/* 圖片 */}
               <div className="absolute inset-8 md:inset-12 overflow-hidden bg-mist">
-                <img
+                <Image
                   src={section.image}
                   alt={section.alt}
+                  fill
+                  sizes="(min-width: 768px) 45vw, calc(100vw - 112px)"
                   loading="lazy"
                   className="w-full h-full object-cover mix-blend-multiply opacity-90 hover:opacity-100 transition-opacity duration-700"
                 />
@@ -121,7 +122,7 @@ export function PhilosophySection() {
   return (
     <section className="py-1">
       {sections.map((s, i) => (
-        <PhilosophyBlock key={i} section={s} index={i} />
+        <PhilosophyBlock key={i} section={s} />
       ))}
     </section>
   );

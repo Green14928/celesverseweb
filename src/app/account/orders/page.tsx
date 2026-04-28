@@ -17,25 +17,31 @@ function formatDateTime(d: Date | null): string {
 }
 
 const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
+  PREPARING: "準備中",
+  COMPLETED: "已完成",
+  CANCELED: "已取消",
   PENDING: "待付款",
   PAID: "已付款",
   REFUND_PENDING: "退費處理中",
   REFUNDED: "已退費",
-  CANCELED: "已取消",
 };
 
 const ORDER_STATUS_STYLE: Record<OrderStatus, string> = {
+  PREPARING: "bg-amber-50 text-amber-700",
+  COMPLETED: "bg-emerald-50 text-emerald-700",
+  CANCELED: "bg-zinc-100 text-zinc-500",
   PENDING: "bg-amber-50 text-amber-700",
   PAID: "bg-emerald-50 text-emerald-700",
   REFUND_PENDING: "bg-orange-50 text-orange-700",
   REFUNDED: "bg-zinc-100 text-zinc-600",
-  CANCELED: "bg-zinc-100 text-zinc-500",
 };
 
 const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
   PENDING: "待付款",
   PAID: "已付款",
   FAILED: "付款失敗",
+  REFUND_PENDING: "退費處理中",
+  REFUNDED: "已退費",
 };
 
 export default async function MyOrdersPage() {
@@ -114,9 +120,7 @@ export default async function MyOrdersPage() {
                   >
                     {ORDER_STATUS_LABEL[order.status]}
                   </span>
-                  {order.paymentStatus !== "PAID" &&
-                    order.status !== "CANCELED" &&
-                    order.status !== "REFUNDED" && (
+                  {order.paymentStatus !== "PAID" && (
                       <span className="text-xs text-zinc-500">
                         {PAYMENT_STATUS_LABEL[order.paymentStatus]}
                       </span>

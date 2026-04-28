@@ -56,7 +56,6 @@ export default async function EditCoursePage({
               totalSlots: course.totalSlots,
               location: course.location,
               calendarColor: course.calendarColor,
-              paymentLink: course.paymentLink,
               startDate: course.startDate,
               endDate: course.endDate,
             }}

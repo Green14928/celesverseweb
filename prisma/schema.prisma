@@ -182,7 +182,7 @@ enum AdminRole {
 
 model Order {
   id          String @id @default(cuid())
-  orderNumber String @unique // 人類可讀，例：CV20260420-0001
+  orderNumber String @unique // 人類可讀，例：13202604287213（2 位前綴 + 8 位日期 + 4 位後綴）
 
   memberId String
   member   Member @relation(fields: [memberId], references: [id])
@@ -215,7 +215,7 @@ model Order {
   refundNote         String?
 
   // 整體狀態
-  status OrderStatus @default(PENDING)
+  status OrderStatus @default(PREPARING)
   note   String?
 
   createdAt DateTime @default(now())
@@ -254,14 +254,18 @@ enum PaymentStatus {
   PENDING
   PAID
   FAILED
+  REFUND_PENDING
+  REFUNDED
 }
 
 enum OrderStatus {
-  PENDING        // 建立未付款
-  PAID           // 付款成功
-  REFUND_PENDING // 管理員已發起退費流程（但 3 勾未齊）
-  REFUNDED       // 退費完成（3 勾齊）
-  CANCELED       // 直接取消（未付款就取消）
+  PREPARING      // 訂單已成立，尚未完成消化
+  COMPLETED      // 訂單已完成，例如課程已上完
+  CANCELED       // 整筆訂單取消
+  PENDING        // 舊資料相容：建立未付款
+  PAID           // 舊資料相容：付款成功
+  REFUND_PENDING // 舊資料相容：退費流程中（新流程改用 PaymentStatus）
+  REFUNDED       // 舊資料相容：已退費（新流程改用 PaymentStatus）
 }
 
 // ============================================

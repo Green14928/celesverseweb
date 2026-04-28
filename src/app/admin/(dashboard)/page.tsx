@@ -5,9 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { AdminCalendar } from "@/features/admin/components/AdminCalendar";
 import { getCalendarLegend } from "@/features/admin/actions/site-content.action";
 import { TogglePublishButton } from "@/features/admin/components/TogglePublishButton";
-import { DeleteCourseButton } from "@/features/admin/components/DeleteCourseButton";
-import { PostponeButton } from "@/features/admin/components/PostponeButton";
-import { DuplicateCourseButton } from "@/features/admin/components/DuplicateCourseButton";
+import { CourseActionsMenu } from "@/features/admin/components/CourseActionsMenu";
 import { CourseListFilters } from "@/features/admin/components/CourseListFilters";
 import type { LegendItem } from "@/features/admin/components/EditableLegend";
 
@@ -167,7 +165,7 @@ export default async function AdminPage({
   if (statusFilter === "active") {
     filteredCourses = allCourses.filter((c) => {
       const s = courseStatus(c);
-      return s !== "draft" && s !== "full";
+      return s !== "full";
     });
   } else if (statusFilter === "completed") {
     filteredCourses = allCourses.filter((c) => courseStatus(c) === "full");
@@ -287,7 +285,7 @@ export default async function AdminPage({
       <AdminCalendar courses={calendarCourses} legendItems={legendItems} />
 
       {/* 課程列表 */}
-      <div className="panel" style={{ marginTop: 20 }}>
+      <div className="course-list-section">
         <div className="panel-head">
           <div className="panel-head-left">
             <h3 className="panel-title">課程列表</h3>
@@ -311,19 +309,19 @@ export default async function AdminPage({
           </div>
         </div>
 
-        <div style={{ overflowX: "auto" }}>
+        <div className="course-table-wrap">
           <table className="data-table">
             <thead>
               <tr>
                 <th style={{ minWidth: 240 }}>課程名稱</th>
                 <th>分類</th>
-                <th>講師</th>
+                <th style={{ minWidth: 88 }}>講師</th>
                 <th>日期</th>
-                <th>報名</th>
+                <th style={{ width: 72 }}>報名</th>
                 <th>價格</th>
                 <th>上架</th>
                 <th>課程狀態</th>
-                <th style={{ textAlign: "right" }}>操作</th>
+                <th style={{ width: 72, textAlign: "right" }}>操作</th>
               </tr>
             </thead>
             <tbody>
@@ -407,16 +405,11 @@ export default async function AdminPage({
                         )}
                       </td>
                       <td>
-                        {teacher ? (
-                          <div className="teacher">
-                            <div className="ava">{teacher.charAt(0)}</div>
-                            <div className="name">{teacher}</div>
-                          </div>
-                        ) : (
-                          <div className="teacher empty">
-                            <div className="name">— 未指派</div>
-                          </div>
-                        )}
+                        <span
+                          className={teacher ? "teacher-name" : "teacher-name muted"}
+                        >
+                          {teacher ?? "— 未指派"}
+                        </span>
                       </td>
                       <td>
                         <div className="date-cell">
@@ -482,22 +475,8 @@ export default async function AdminPage({
                         </span>
                       </td>
                       <td>
-                        <div
-                          className="ops"
-                          style={{ justifyContent: "flex-end" }}
-                        >
-                          <Link
-                            href={`/admin/courses/${course.id}/edit`}
-                            className="op-btn"
-                          >
-                            編輯
-                          </Link>
-                          <DuplicateCourseButton
-                            courseId={course.id}
-                            courseName={course.template.title}
-                          />
-                          <div className="op-divider" />
-                          <PostponeButton
+                        <div className="ops course-ops">
+                          <CourseActionsMenu
                             courseId={course.id}
                             courseName={course.template.title}
                             isPostponed={course.isPostponed}
@@ -508,10 +487,6 @@ export default async function AdminPage({
                                     .split("T")[0]
                                 : null
                             }
-                          />
-                          <DeleteCourseButton
-                            courseId={course.id}
-                            courseName={course.template.title}
                           />
                         </div>
                       </td>

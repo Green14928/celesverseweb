@@ -46,29 +46,12 @@ export default async function TeachersAdminPage() {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 14,
+                  gap: 12,
                   padding: "14px 22px",
                   borderTop:
                     i === 0 ? "none" : "1px solid var(--admin-border)",
                 }}
               >
-                {teacher.photo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={teacher.photo}
-                    alt={teacher.name}
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                    }}
-                  />
-                ) : (
-                  <span className="mini-avatar" style={{ width: 40, height: 40, fontSize: 15 }}>
-                    {teacher.name.charAt(0)}
-                  </span>
-                )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600 }}>{teacher.name}</div>
                   <div className="muted" style={{ fontSize: 11 }}>

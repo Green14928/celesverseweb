@@ -47,7 +47,7 @@ export default async function MyCoursesPage() {
     where: {
       memberId: session.user.id,
       paymentStatus: "PAID",
-      status: { notIn: ["REFUNDED", "CANCELED"] },
+      status: { notIn: ["REFUNDED", "REFUND_PENDING", "CANCELED"] },
     },
     select: {
       orderNumber: true,

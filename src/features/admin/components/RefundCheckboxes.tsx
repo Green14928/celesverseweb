@@ -133,7 +133,7 @@ export function RefundCheckboxes({
                 lineHeight: 1.6,
               }}
             >
-              ✓ 三項都完成，訂單狀態已標記為「已退費」
+              ✓ 三項都完成，付款狀態已標記為「已退費」
               {savedAt && (
                 <span style={{ marginLeft: 6, opacity: 0.7 }}>
                   · {new Date(savedAt).toLocaleString("zh-TW")}
@@ -190,7 +190,7 @@ export function RefundCheckboxes({
           </div>
         ) : (
           <p className="muted" style={{ fontSize: 11, marginTop: 12 }}>
-            三項都勾選後會自動把訂單標記為「已退費」+ 寄退費通知信給客戶
+            三項都勾選後會自動把付款標記為「已退費」+ 寄退費通知信給客戶
           </p>
         )}
       </div>

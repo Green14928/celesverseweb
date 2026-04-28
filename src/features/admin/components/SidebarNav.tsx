@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 type IconKind =
   | "calendar"
   | "course"
-  | "cat"
+  | "pending"
   | "teacher"
   | "order"
   | "invoice"
@@ -40,13 +40,13 @@ function NavIcon({ kind }: { kind: IconKind }) {
           <path d="M8 1.7v1.4M8 12.9v1.4M1.7 8h1.4M12.9 8h1.4M3.5 3.5l1 1M11.5 11.5l1 1M3.5 12.5l1-1M11.5 4.5l1-1" />
         </svg>
       );
-    case "cat":
+    case "pending":
       return (
         <svg {...common}>
-          <rect x="2.5" y="2.5" width="4.5" height="4.5" rx="0.8" />
-          <rect x="9" y="2.5" width="4.5" height="4.5" rx="0.8" />
-          <rect x="2.5" y="9" width="4.5" height="4.5" rx="0.8" />
-          <rect x="9" y="9" width="4.5" height="4.5" rx="0.8" />
+          <path d="M3 3.5h10M4.5 3.5v9h7v-9" />
+          <path d="M6.2 7h3.6M6.2 9.5h2.2" />
+          <path d="M11 10.5l1.8 1.8" />
+          <circle cx="10.2" cy="9.7" r="1.7" />
         </svg>
       );
     case "teacher":
@@ -108,7 +108,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/admin", label: "課程行事曆", icon: "calendar", match: "/admin" },
       { href: "/admin/templates", label: "課程管理", icon: "course" },
-      { href: "/admin/categories", label: "分類管理", icon: "cat" },
+      { href: "/admin/pending-students", label: "待安排學員", icon: "pending" },
       { href: "/admin/teachers", label: "導師管理", icon: "teacher" },
     ],
   },

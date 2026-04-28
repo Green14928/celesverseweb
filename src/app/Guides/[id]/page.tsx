@@ -1,6 +1,7 @@
 // 導師詳情頁 — Silk & Shadow
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 
 export default async function TeacherDetailPage({
@@ -63,11 +64,14 @@ export default async function TeacherDetailPage({
         <div className="bg-background shadow-2xl px-6 md:px-12 lg:px-16 py-16 md:py-24">
           <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 md:gap-20 items-center">
             <div className="animate-float-up">
-              <div className="relative overflow-hidden shadow-[var(--shadow-soft)] aspect-[3/4] max-w-md mx-auto md:mx-0">
+              <div className="relative overflow-hidden shadow-soft aspect-[3/4] max-w-md mx-auto md:mx-0">
                 {teacher.photo ? (
-                  <img
+                  <Image
                     src={teacher.photo}
                     alt={teacher.name}
+                    fill
+                    sizes="(min-width: 768px) 448px, calc(100vw - 48px)"
+                    unoptimized
                     className="w-full h-full object-cover mix-blend-multiply opacity-90"
                   />
                 ) : (
@@ -184,13 +188,11 @@ export default async function TeacherDetailPage({
 
             <div className="space-y-4">
               {teacher.courses.map((course) => {
-                const remaining = course.totalSlots - course.soldCount;
-                const isSoldOut = remaining <= 0;
                 return (
                   <Link
                     key={course.id}
                     href={`/experiences/${course.id}`}
-                    className="group block p-6 border border-border bg-background hover:border-gold-dust/50 hover:shadow-[var(--shadow-soft)] transition-all duration-500"
+                    className="group block p-6 border border-border bg-background hover:border-gold-dust/50 hover:shadow-soft transition-all duration-500"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="space-y-2 flex-1">

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { moveStudentsToCourse } from "@/features/admin/actions/course.action";
+import { paymentText } from "@/lib/order-labels";
 
 interface Student {
   orderItemId: string;
@@ -28,6 +29,8 @@ interface MoveStudentsPanelProps {
 const paymentColors: Record<string, string> = {
   PENDING: "text-amber-600",
   PAID: "text-emerald-600",
+  FAILED: "text-red-600",
+  REFUND_PENDING: "text-amber-600",
   REFUNDED: "text-purple-600",
 };
 
@@ -152,11 +155,7 @@ export function MoveStudentsPanel({
             <span
               className={`text-xs font-medium ${paymentColors[s.paymentStatus] || "text-zinc-400"}`}
             >
-              {s.paymentStatus === "PAID"
-                ? "已付款"
-                : s.paymentStatus === "REFUNDED"
-                ? "已退款"
-                : "待付款"}
+              {paymentText[s.paymentStatus] ?? "待付款"}
             </span>
           </label>
         ))}

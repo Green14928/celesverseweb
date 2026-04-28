@@ -38,6 +38,9 @@ export default async function TemplatesPage({
           <div className="page-sub">Course Templates</div>
         </div>
         <div className="page-actions">
+          <Link href="/admin/categories" className="btn">
+            分類管理
+          </Link>
           <Link href="/admin/templates/new" className="btn btn-primary">
             + 新增課程
           </Link>

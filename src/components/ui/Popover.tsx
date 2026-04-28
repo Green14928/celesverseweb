@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect, type ReactNode } from "react";
+import {
+  useCallback,
+  useState,
+  useRef,
+  useEffect,
+  type ReactNode,
+} from "react";
 
 interface PopoverProps {
   trigger: ReactNode;
@@ -31,13 +37,13 @@ export function Popover({
     }
   }
 
-  function close() {
+  const close = useCallback(() => {
     if (isControlled) {
       onOpenChange?.(false);
     } else {
       setInternalOpen(false);
     }
-  }
+  }, [isControlled, onOpenChange]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -49,7 +55,7 @@ export function Popover({
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
+  }, [isOpen, close]);
 
   const alignClass =
     align === "center"

@@ -4,53 +4,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { buildAioPaymentForm, type EcpayPaymentForm } from "@/lib/ecpay/aio";
-
-// ==========================
-// 幸運號碼邏輯（沿用舊版）
-// ==========================
-const LUCKY_SUFFIXES = [
-  "13", "14", "19", "26", "27", "28", "31", "39",
-  "41", "49", "62", "68", "72", "78", "82", "86",
-  "87", "91", "93", "94",
-];
-const BANNED_PAIRS = ["18", "81", "79", "97", "42", "24", "36", "63"];
-
-function hasBannedPair(digits: string): boolean {
-  for (let i = 0; i < digits.length - 1; i++) {
-    const pair = digits[i] + digits[i + 1];
-    if (BANNED_PAIRS.includes(pair)) return true;
-  }
-  return false;
-}
-
-function generateLuckyCode(): string {
-  const now = new Date();
-  const date =
-    String(now.getFullYear()) +
-    String(now.getMonth() + 1).padStart(2, "0") +
-    String(now.getDate()).padStart(2, "0");
-  const dateLastDigit = date.slice(-1);
-  const validSuffixes = LUCKY_SUFFIXES.filter((s) => {
-    const pair = `${dateLastDigit}${s[0]}`;
-    return !BANNED_PAIRS.includes(pair);
-  });
-  const pool = validSuffixes.length > 0 ? validSuffixes : LUCKY_SUFFIXES;
-  const suffix = pool[Math.floor(Math.random() * pool.length)];
-
-  let rand4: string;
-  do {
-    const digits: string[] = [];
-    for (let i = 0; i < 4; i++) digits.push(String(Math.floor(Math.random() * 10)));
-    rand4 = digits.join("");
-  } while (
-    hasBannedPair(rand4) ||
-    BANNED_PAIRS.includes(rand4[3] + date[0]) ||
-    (rand4.split("0").length - 1) > 1 ||
-    (rand4.split("5").length - 1) > 1
-  );
-
-  return `${rand4}${date}${suffix}`;
-}
+import { generateOrderNumber } from "@/lib/order-number";
 
 // ==========================
 // Server Action 輸入型別
@@ -111,10 +65,10 @@ export async function createOrder(
         const member = await tx.member.findUnique({ where: { id: memberId } });
         if (!member) throw new Error("會員資料不存在");
 
-        // 產生訂單編號（CV 前綴 + 幸運 14 碼）
+        // 產生訂單編號：2 位前綴 + 8 位年月日 + 4 位後綴
         let tryOrderNumber = "";
         for (let i = 0; i < 20; i++) {
-          const candidate = `CV${generateLuckyCode()}`;
+          const candidate = generateOrderNumber();
           const exists = await tx.order.findUnique({
             where: { orderNumber: candidate },
             select: { id: true },
@@ -183,7 +137,7 @@ export async function createOrder(
             totalAmount: course.price,
             paymentMethod: "CREDIT_CARD",
             paymentStatus: "PENDING",
-            status: "PENDING",
+            status: "PREPARING",
             ecpayMerchantTradeNo: tryOrderNumber,
             ...invoiceFields,
             items: {

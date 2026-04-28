@@ -4,29 +4,24 @@ import { prisma } from "@/lib/prisma";
 import { OrderFilters } from "@/features/admin/components/OrderFilters";
 import { Suspense } from "react";
 import type { Prisma } from "@/generated/prisma/client";
+import { orderStatusLabel, paymentLabel } from "@/lib/order-labels";
 
 export const dynamic = "force-dynamic";
-
-const paymentLabel: Record<string, { text: string; cls: string }> = {
-  PENDING: { text: "待付款", cls: "tag-amber" },
-  PAID: { text: "已付款", cls: "tag-green" },
-  FAILED: { text: "付款失敗", cls: "tag-red" },
-};
-
-const statusLabel: Record<string, { text: string; cls: string }> = {
-  PENDING: { text: "待付款", cls: "tag-amber" },
-  PAID: { text: "已付款", cls: "tag-green" },
-  REFUND_PENDING: { text: "退費處理中", cls: "tag-amber" },
-  REFUNDED: { text: "已退費", cls: "tag-purple" },
-  CANCELED: { text: "已取消", cls: "tag-neutral" },
-};
 
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string; year?: string; month?: string }>;
+  searchParams: Promise<{
+    search?: string;
+    startDate?: string;
+    endDate?: string;
+    paymentStatus?: string;
+    status?: string;
+    invoice?: string;
+  }>;
 }) {
-  const { search, year, month } = await searchParams;
+  const { search, startDate, endDate, paymentStatus, status, invoice } =
+    await searchParams;
 
   const where: Prisma.OrderWhereInput = {};
 
@@ -39,14 +34,32 @@ export default async function AdminOrdersPage({
     ];
   }
 
-  if (year && month && !isNaN(Number(year)) && !isNaN(Number(month))) {
-    const y = Number(year);
-    const m = Number(month);
-    if (y > 2000 && m >= 1 && m <= 12) {
-      const start = new Date(y, m - 1, 1);
-      const end = new Date(y, m, 1);
-      where.createdAt = { gte: start, lt: end };
-    }
+  if (startDate || endDate) {
+    const createdAt: Prisma.DateTimeFilter = {};
+    if (startDate) createdAt.gte = new Date(`${startDate}T00:00:00`);
+    if (endDate) createdAt.lte = new Date(`${endDate}T23:59:59.999`);
+    where.createdAt = createdAt;
+  }
+
+  if (paymentStatus) {
+    where.paymentStatus = paymentStatus as
+      | "PENDING"
+      | "PAID"
+      | "FAILED"
+      | "REFUND_PENDING"
+      | "REFUNDED";
+  }
+
+  if (status) {
+    where.status = status as "PREPARING" | "COMPLETED" | "CANCELED";
+  }
+
+  if (invoice === "ISSUED") {
+    where.invoices = { some: { status: "ISSUED" } };
+  } else if (invoice === "UNISSUED") {
+    where.invoices = { none: { status: "ISSUED" } };
+  } else if (invoice === "VOIDED") {
+    where.invoices = { some: { status: "VOIDED" } };
   }
 
   const orders = await prisma.order.findMany({
@@ -90,15 +103,17 @@ export default async function AdminOrdersPage({
           <div className="caption">
             共 <span className="serif-num" style={{ fontSize: 14 }}>{orders.length}</span> 筆
             {search && <> · 搜尋「{search}」</>}
-            {year && month && (
-              <> · {year} 年 {month} 月</>
+            {(startDate || endDate) && (
+              <> · {startDate || "最早"} 至 {endDate || "今天"}</>
             )}
           </div>
         </div>
 
         {orders.length === 0 ? (
           <div style={{ padding: "60px 20px", textAlign: "center" }} className="muted">
-            {search || month ? "沒有符合條件的訂單" : "還沒有任何訂單"}
+            {search || startDate || endDate || paymentStatus || status || invoice
+              ? "沒有符合條件的訂單"
+              : "還沒有任何訂單"}
           </div>
         ) : (
           <div style={{ overflowX: "auto" }}>
@@ -120,64 +135,67 @@ export default async function AdminOrdersPage({
                   const payment =
                     paymentLabel[order.paymentStatus] ?? paymentLabel.PENDING;
                   const status =
-                    statusLabel[order.status] ?? statusLabel.PENDING;
+                    orderStatusLabel[order.status] ?? orderStatusLabel.PREPARING;
                   const activeInvoice = order.invoices.find(
                     (inv) => inv.status === "ISSUED",
                   );
+                  const href = `/admin/orders/${order.id}`;
                   return (
-                    <tr key={order.id}>
+                    <tr key={order.id} className="clickable-row">
                       <td>
                         <Link
-                          href={`/admin/orders/${order.id}`}
-                          className="link"
+                          href={href}
+                          className="row-link"
                           style={{ fontFamily: "var(--admin-font-serif)", fontSize: 12 }}
                         >
                           {order.orderNumber}
                         </Link>
                       </td>
                       <td>
-                        <Link href={`/admin/orders/${order.id}`} className="link">
+                        <Link href={href} className="row-link">
                           <div style={{ fontWeight: 600 }}>{order.member.name}</div>
-                          <div className="caption" style={{ textTransform: "none", letterSpacing: 0 }}>
-                            {order.member.email}
-                          </div>
-                          {order.member.phone && (
-                            <div className="caption" style={{ textTransform: "none", letterSpacing: 0 }}>
-                              {order.member.phone}
-                            </div>
-                          )}
                         </Link>
                       </td>
                       <td>
-                        <Link href={`/admin/orders/${order.id}`} className="link">
+                        <Link href={href} className="row-link">
                           {order.items
                             .map((item) => item.course.template.title)
                             .join(", ")}
                         </Link>
                       </td>
                       <td className="tnum">
-                        <span style={{ fontSize: 10, color: "var(--admin-text-muted)", marginRight: 2 }}>
-                          NT$
-                        </span>
-                        {order.totalAmount.toLocaleString()}
-                      </td>
-                      <td>
-                        <span className={`tag ${payment.cls}`}>{payment.text}</span>
-                      </td>
-                      <td>
-                        <span className={`tag ${status.cls}`}>{status.text}</span>
-                      </td>
-                      <td>
-                        {activeInvoice ? (
-                          <span className="tnum" style={{ fontSize: 12 }}>
-                            {activeInvoice.invoiceNumber}
+                        <Link href={href} className="row-link">
+                          <span style={{ fontSize: 10, color: "var(--admin-text-muted)", marginRight: 2 }}>
+                            NT$
                           </span>
-                        ) : (
-                          <span className="muted">—</span>
-                        )}
+                          {order.totalAmount.toLocaleString()}
+                        </Link>
+                      </td>
+                      <td>
+                        <Link href={href} className="row-link">
+                          <span className={`tag ${payment.cls}`}>{payment.text}</span>
+                        </Link>
+                      </td>
+                      <td>
+                        <Link href={href} className="row-link">
+                          <span className={`tag ${status.cls}`}>{status.text}</span>
+                        </Link>
+                      </td>
+                      <td>
+                        <Link href={href} className="row-link">
+                          {activeInvoice ? (
+                            <span className="tnum" style={{ fontSize: 12 }}>
+                              {activeInvoice.invoiceNumber}
+                            </span>
+                          ) : (
+                            <span className="muted">—</span>
+                          )}
+                        </Link>
                       </td>
                       <td className="muted" style={{ fontSize: 12, whiteSpace: "nowrap" }}>
-                        {new Date(order.createdAt).toLocaleDateString("zh-TW")}
+                        <Link href={href} className="row-link">
+                          {new Date(order.createdAt).toLocaleDateString("zh-TW")}
+                        </Link>
                       </td>
                     </tr>
                   );

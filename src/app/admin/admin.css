@@ -403,6 +403,23 @@
 .admin-shell .panel-body {
   padding: 22px;
 }
+.admin-shell .course-list-section {
+  margin-top: 28px;
+  margin-bottom: 48px;
+}
+.admin-shell .course-list-section .panel-head {
+  padding: 0 0 16px;
+  border-bottom: 1px solid var(--admin-border);
+}
+.admin-shell .course-list-section .filter-row {
+  padding: 14px 0;
+}
+.admin-shell .course-table-wrap {
+  overflow: visible;
+}
+.admin-shell .course-table-wrap .data-table {
+  min-width: 1040px;
+}
 
 /* ═════════════════════════ Stat strip (starry ink) ═════════════════════════ */
 .admin-shell .stat-strip {
@@ -565,6 +582,20 @@
 }
 .admin-shell .data-table tbody tr:last-child td {
   border-bottom: none;
+}
+.admin-shell .data-table tbody tr.clickable-row td {
+  padding: 0;
+}
+.admin-shell .row-link {
+  display: block;
+  height: 100%;
+  padding: 14px;
+  color: inherit;
+  text-decoration: none;
+}
+.admin-shell .row-link:hover {
+  color: inherit;
+  text-decoration: none;
 }
 
 .admin-shell .tnum {
@@ -1123,6 +1154,48 @@
   gap: 2px;
   align-items: center;
 }
+.admin-shell .course-ops {
+  justify-content: flex-end;
+}
+.admin-shell .course-actions-menu {
+  position: relative;
+  display: inline-flex;
+  justify-content: flex-end;
+}
+.admin-shell .course-actions-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  display: flex;
+  min-width: 180px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  background: var(--admin-bg-card);
+  box-shadow: var(--admin-shadow);
+}
+.admin-shell .course-actions-panel .op-btn {
+  width: 100%;
+  justify-content: flex-start;
+  white-space: nowrap;
+}
+.admin-shell .course-actions-panel > div {
+  width: 100%;
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch !important;
+  gap: 6px !important;
+}
+.admin-shell .course-actions-panel input {
+  max-width: 100%;
+  border: 1px solid var(--admin-border);
+  border-radius: 4px;
+  background: var(--admin-bg-card);
+  color: var(--admin-text);
+}
 
 /* ═════════════════════════ Course-row composite cells ═════════════════════════ */
 .admin-shell .course-name {
@@ -1149,28 +1222,11 @@
   margin-top: 1px;
 }
 
-.admin-shell .teacher {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.admin-shell .teacher .ava {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--admin-accent-light);
-  color: var(--admin-accent);
-  display: grid;
-  place-items: center;
-  font-family: var(--admin-font-serif);
-  font-weight: 600;
-  font-size: 11px;
-}
-.admin-shell .teacher .name {
+.admin-shell .teacher-name {
   font-size: 12px;
   color: var(--admin-text-secondary);
 }
-.admin-shell .teacher.empty .name {
+.admin-shell .teacher-name.muted {
   color: var(--admin-text-muted);
   font-style: italic;
 }
@@ -1197,8 +1253,8 @@
 .admin-shell .capacity {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-width: 90px;
+  gap: 3px;
+  width: 56px;
 }
 .admin-shell .capacity .nums {
   display: flex;
@@ -1221,7 +1277,7 @@
   font-size: 11px;
 }
 .admin-shell .capacity .bar {
-  height: 3px;
+  height: 2px;
   background: var(--admin-bg);
   border-radius: 2px;
   overflow: hidden;

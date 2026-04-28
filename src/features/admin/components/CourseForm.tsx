@@ -38,7 +38,6 @@ interface CourseFormProps {
     totalSlots: number;
     location: string | null;
     calendarColor: string | null;
-    paymentLink: string | null;
     startDate: Date | null;
     endDate: Date | null;
   };
@@ -106,7 +105,6 @@ export function CourseForm({
         totalSlots: Number(fd.get("totalSlots")),
         location: (fd.get("location") as string) || undefined,
         calendarColor: calendarColor || undefined,
-        paymentLink: (fd.get("paymentLink") as string) || undefined,
         startDate: fd.get("startDate") as string,
         endDate: fd.get("endDate") as string,
       },
@@ -294,20 +292,6 @@ export function CourseForm({
             style={{ width: "100%" }}
           />
         </div>
-      </div>
-
-      <div>
-        <label style={labelStyle}>付款連結</label>
-        <p style={hintStyle}>
-          輸入第三方付款頁面的網址（如綠界、藍新）
-        </p>
-        <input
-          name="paymentLink"
-          type="url"
-          defaultValue={defaultValues?.paymentLink ?? ""}
-          placeholder="https://..."
-          style={{ width: "100%" }}
-        />
       </div>
 
       <div>

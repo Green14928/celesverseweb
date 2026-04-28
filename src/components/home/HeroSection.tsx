@@ -3,6 +3,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 
 export function HeroSection() {
   return (
@@ -81,9 +82,11 @@ export function HeroSection() {
 
               {/* 圖片 */}
               <div className="absolute inset-0 bg-mist overflow-hidden">
-                <img
+                <Image
                   src="/images/hero-forest.png"
                   alt="Hero"
+                  fill
+                  sizes="(min-width: 768px) 40vw, calc(100vw - 112px)"
                   className="w-full h-full object-cover mix-blend-multiply opacity-90"
                 />
               </div>

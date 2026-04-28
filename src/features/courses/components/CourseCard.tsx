@@ -1,5 +1,6 @@
 // 課程商品卡片 — Silk & Shadow
 import Link from "next/link";
+import Image from "next/image";
 
 interface CourseCardProps {
   id: string;
@@ -21,16 +22,11 @@ export function CourseCard({
   description,
   price,
   imageUrl,
-  totalSlots,
-  soldCount,
   category,
   startDate,
   location,
   index = 0,
 }: CourseCardProps) {
-  const remaining = totalSlots - soldCount;
-  const isSoldOut = remaining <= 0;
-
   return (
     <Link
       href={`/experiences/${id}`}
@@ -38,11 +34,14 @@ export function CourseCard({
       style={{ animationDelay: `${index * 0.1}s` }}
     >
       {/* 課程圖片 — 方正無圓角 */}
-      <div className="aspect-[4/5] bg-mist overflow-hidden shadow-[var(--shadow-soft)]">
+      <div className="relative aspect-[4/5] bg-mist overflow-hidden shadow-soft">
         {imageUrl ? (
-          <img
+          <Image
             src={imageUrl}
             alt={title}
+            fill
+            sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, calc(100vw - 48px)"
+            unoptimized
             className="w-full h-full object-cover mix-blend-multiply opacity-90 group-hover:scale-105 group-hover:opacity-100 group-hover:mix-blend-normal transition-all duration-1000"
           />
         ) : (

@@ -94,50 +94,68 @@ export default async function AdminMembersPage({
               <tbody>
                 {members.map((m) => {
                   const paid = paidByMember.get(m.id);
+                  const href = `/admin/members/${m.id}`;
                   return (
-                    <tr key={m.id}>
+                    <tr key={m.id} className="clickable-row">
                       <td>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span className="mini-avatar">{m.name.charAt(0)}</span>
-                          <Link href={`/admin/members/${m.id}`} className="link">
+                        <Link href={href} className="row-link">
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                             {m.name}
-                          </Link>
-                          {!m.isActive && (
-                            <span className="tag tag-neutral">停用</span>
-                          )}
-                        </div>
+                            {!m.isActive && (
+                              <span className="tag tag-neutral">停用</span>
+                            )}
+                          </div>
+                        </Link>
                       </td>
-                      <td className="muted">{m.email}</td>
-                      <td className="muted">{m.phone ?? "—"}</td>
-                      <td className="tnum">{m._count.orders}</td>
+                      <td className="muted">
+                        <Link href={href} className="row-link">
+                          {m.email}
+                        </Link>
+                      </td>
+                      <td className="muted">
+                        <Link href={href} className="row-link">
+                          {m.phone ?? "—"}
+                        </Link>
+                      </td>
+                      <td className="tnum">
+                        <Link href={href} className="row-link">
+                          {m._count.orders}
+                        </Link>
+                      </td>
                       <td>
-                        {paid ? (
-                          <>
-                            <span className="muted" style={{ fontSize: 11 }}>
-                              ({paid.count} 筆)
-                            </span>
-                            <span className="tnum" style={{ marginLeft: 6 }}>
-                              <span style={{ fontSize: 10, color: "var(--admin-text-muted)", marginRight: 2 }}>
-                                NT$
+                        <Link href={href} className="row-link">
+                          {paid ? (
+                            <>
+                              <span className="muted" style={{ fontSize: 11 }}>
+                                ({paid.count} 筆)
                               </span>
-                              {paid.total.toLocaleString()}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="muted">—</span>
-                        )}
+                              <span className="tnum" style={{ marginLeft: 6 }}>
+                                <span style={{ fontSize: 10, color: "var(--admin-text-muted)", marginRight: 2 }}>
+                                  NT$
+                                </span>
+                                {paid.total.toLocaleString()}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="muted">—</span>
+                          )}
+                        </Link>
                       </td>
                       <td>
-                        {m.profileCompletedAt ? (
-                          <span className="tag tag-green">已補完</span>
-                        ) : (
-                          <span className="tag tag-amber">未補完</span>
-                        )}
+                        <Link href={href} className="row-link">
+                          {m.profileCompletedAt ? (
+                            <span className="tag tag-green">已補完</span>
+                          ) : (
+                            <span className="tag tag-amber">未補完</span>
+                          )}
+                        </Link>
                       </td>
                       <td className="muted" style={{ fontSize: 12, whiteSpace: "nowrap" }}>
-                        {m.lastLoginAt
-                          ? new Date(m.lastLoginAt).toLocaleDateString("zh-TW")
-                          : "—"}
+                        <Link href={href} className="row-link">
+                          {m.lastLoginAt
+                            ? new Date(m.lastLoginAt).toLocaleDateString("zh-TW")
+                            : "—"}
+                        </Link>
                       </td>
                     </tr>
                   );

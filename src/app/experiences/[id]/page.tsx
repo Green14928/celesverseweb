@@ -1,6 +1,7 @@
 // 課程詳情頁 — 電商版面：首屏（左封面 + 右資訊/價格/報名）→ 說明 → 內容圖一張張往下 → 導師
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { PurchaseForm } from "@/features/orders/components/PurchaseForm";
@@ -58,9 +59,13 @@ export default async function CourseDetailPage({
               {/* 左：封面 */}
               <div className="w-full">
                 {coverImage ? (
-                  <img
+                  <Image
                     src={coverImage}
                     alt={course.template.title}
+                    width={1200}
+                    height={900}
+                    sizes="(min-width: 1024px) 50vw, calc(100vw - 48px)"
+                    unoptimized
                     className="w-full h-auto object-cover aspect-[4/3] bg-mist"
                   />
                 ) : (
@@ -89,9 +94,13 @@ export default async function CourseDetailPage({
                     className="flex items-center gap-4 p-3 -mx-3 rounded hover:bg-mist/60 transition-colors group"
                   >
                     {course.teacher.photo ? (
-                      <img
+                      <Image
                         src={course.teacher.photo}
                         alt={course.teacher.name}
+                        width={56}
+                        height={56}
+                        sizes="56px"
+                        unoptimized
                         className="w-14 h-14 object-cover mix-blend-multiply opacity-90 flex-shrink-0"
                       />
                     ) : (
@@ -189,10 +198,14 @@ export default async function CourseDetailPage({
           <div className="w-full bg-mist py-0 md:py-10">
             <div className="w-full md:max-w-[1330px] md:mx-auto">
               {contentImages.map((url, i) => (
-                <img
+                <Image
                   key={`${url}-${i}`}
                   src={url}
                   alt={`${course.template.title} 內容圖 ${i + 1}`}
+                  width={1330}
+                  height={900}
+                  sizes="(min-width: 768px) 1330px, 100vw"
+                  unoptimized
                   className="w-full h-auto block"
                 />
               ))}

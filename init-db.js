@@ -43,6 +43,40 @@ function run(args) {
     run(["db", "push", "--accept-data-loss"]);
   }
 
+  // Backfill old order/payment split:
+  // - refund progress now belongs to paymentStatus
+  // - order status now only tracks processing progress
+  const backfillClient = new Client({ connectionString: url });
+  await backfillClient.connect();
+  try {
+    await backfillClient.query(`
+      UPDATE "Order"
+      SET
+        "paymentStatus" = 'REFUND_PENDING'::"PaymentStatus",
+        status = 'CANCELED'::"OrderStatus"
+      WHERE status = 'REFUND_PENDING'::"OrderStatus"
+        AND "paymentStatus" <> 'REFUND_PENDING'::"PaymentStatus"
+    `);
+    await backfillClient.query(`
+      UPDATE "Order"
+      SET
+        "paymentStatus" = 'REFUNDED'::"PaymentStatus",
+        status = 'CANCELED'::"OrderStatus"
+      WHERE status = 'REFUNDED'::"OrderStatus"
+        AND "paymentStatus" <> 'REFUNDED'::"PaymentStatus"
+    `);
+    await backfillClient.query(`
+      UPDATE "Order"
+      SET status = 'PREPARING'::"OrderStatus"
+      WHERE status IN ('PENDING'::"OrderStatus", 'PAID'::"OrderStatus")
+    `);
+    console.log("[init-db] Backfilled order/payment statuses");
+  } catch (err) {
+    console.warn("[init-db] order status backfill skipped:", err.message);
+  } finally {
+    await backfillClient.end();
+  }
+
   // Ensure a SUPER_ADMIN exists so Google login can reach the dashboard.
   const seedEmail = process.env.SEED_ADMIN_EMAIL || "amyclaw4928@gmail.com";
   const seedName = process.env.SEED_ADMIN_NAME || "Amy";

@@ -2,20 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import type { Prisma } from "@/generated/prisma/client";
-
-const paymentLabels: Record<string, string> = {
-  PENDING: "待付款",
-  PAID: "已付款",
-  FAILED: "付款失敗",
-};
-
-const statusLabels: Record<string, string> = {
-  PENDING: "待付款",
-  PAID: "已付款",
-  REFUND_PENDING: "退費處理中",
-  REFUNDED: "已退費",
-  CANCELED: "已取消",
-};
+import { orderStatusText, paymentText } from "@/lib/order-labels";
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -25,9 +12,11 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = request.nextUrl;
   const search = searchParams.get("search") || "";
-  const month = searchParams.get("month") || "";
+  const startDate = searchParams.get("startDate") || "";
+  const endDate = searchParams.get("endDate") || "";
   const paymentStatus = searchParams.get("paymentStatus") || "";
   const status = searchParams.get("status") || "";
+  const invoice = searchParams.get("invoice") || "";
 
   const where: Prisma.OrderWhereInput = {};
 
@@ -40,24 +29,35 @@ export async function GET(request: NextRequest) {
     ];
   }
 
-  if (month) {
-    const [year, mon] = month.split("-").map(Number);
-    const start = new Date(year, mon - 1, 1);
-    const end = new Date(year, mon, 1);
-    where.createdAt = { gte: start, lt: end };
+  if (startDate || endDate) {
+    const createdAt: Prisma.DateTimeFilter = {};
+    if (startDate) createdAt.gte = new Date(`${startDate}T00:00:00`);
+    if (endDate) createdAt.lte = new Date(`${endDate}T23:59:59.999`);
+    where.createdAt = createdAt;
   }
 
   if (paymentStatus) {
-    where.paymentStatus = paymentStatus as "PENDING" | "PAID" | "FAILED";
+    where.paymentStatus = paymentStatus as
+      | "PENDING"
+      | "PAID"
+      | "FAILED"
+      | "REFUND_PENDING"
+      | "REFUNDED";
   }
 
   if (status) {
     where.status = status as
-      | "PENDING"
-      | "PAID"
-      | "REFUND_PENDING"
-      | "REFUNDED"
+      | "PREPARING"
+      | "COMPLETED"
       | "CANCELED";
+  }
+
+  if (invoice === "ISSUED") {
+    where.invoices = { some: { status: "ISSUED" } };
+  } else if (invoice === "UNISSUED") {
+    where.invoices = { none: { status: "ISSUED" } };
+  } else if (invoice === "VOIDED") {
+    where.invoices = { some: { status: "VOIDED" } };
   }
 
   const orders = await prisma.order.findMany({
@@ -87,16 +87,16 @@ export async function GET(request: NextRequest) {
       order.member.phone || "",
       escapeCsv(courses),
       order.totalAmount,
-      paymentLabels[order.paymentStatus] || order.paymentStatus,
-      statusLabels[order.status] || order.status,
+      paymentText[order.paymentStatus] || order.paymentStatus,
+      orderStatusText[order.status] || order.status,
       new Date(order.createdAt).toLocaleDateString("zh-TW"),
     ].join(",");
   });
 
   const csv = BOM + header + "\n" + rows.join("\n");
 
-  const filename = month
-    ? `orders_${month}.csv`
+  const filename = startDate || endDate
+    ? `orders_${startDate || "start"}_${endDate || "today"}.csv`
     : `orders_${new Date().toISOString().slice(0, 10)}.csv`;
 
   return new NextResponse(csv, {

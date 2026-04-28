@@ -46,6 +46,9 @@ export function CourseTemplateForm({
   const [images, setImages] = useState<string[]>(existingImages ?? []);
   const [coverUploading, setCoverUploading] = useState(false);
   const [contentUploading, setContentUploading] = useState(false);
+  const initialCategoryName =
+    categories.find((cat) => cat.id === defaultValues?.categoryId)?.name ?? "";
+  const [categoryName, setCategoryName] = useState(initialCategoryName);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const contentInputRef = useRef<HTMLInputElement>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -149,7 +152,7 @@ export function CourseTemplateForm({
         title: fd.get("title") as string,
         description: fd.get("description") as string,
         content: fd.get("content") as string,
-        categoryId: (fd.get("categoryId") as string) || undefined,
+        categoryName,
         images,
       },
       templateId
@@ -217,19 +220,23 @@ export function CourseTemplateForm({
 
       <div>
         <label style={labelStyle}>分類</label>
-        <select
-          name="categoryId"
-          defaultValue={defaultValues?.categoryId ?? ""}
-          className="select"
-          style={{ width: "100%" }}
-        >
-          <option value="">無分類</option>
+        <input
+          type="text"
+          className="input"
+          value={categoryName}
+          onChange={(e) => setCategoryName(e.target.value)}
+          list="course-category-options"
+          placeholder="輸入或搜尋分類名稱"
+          style={{ width: "12em", maxWidth: "100%" }}
+        />
+        <datalist id="course-category-options">
           {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
+            <option key={cat.id} value={cat.name} />
           ))}
-        </select>
+        </datalist>
+        <p style={{ ...hintStyle, marginTop: 6, marginBottom: 0 }}>
+          可直接輸入搜尋；如果儲存時找不到同名分類，會自動建立新分類。
+        </p>
       </div>
 
       {/* 課程封面 — 單張大圖，顯示在課程頁最上方 */}

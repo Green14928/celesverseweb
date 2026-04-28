@@ -37,6 +37,7 @@ interface TemplateFormData {
   description: string;
   content?: string;
   categoryId?: string;
+  categoryName?: string;
   images?: string[];
 }
 
@@ -55,11 +56,38 @@ export async function saveTemplate(
   }
 
   try {
+    let categoryId = data.categoryId?.trim() || null;
+    const newCategoryName = data.categoryName?.trim();
+
+    if (newCategoryName) {
+      const existingCategory = await prisma.category.findUnique({
+        where: { name: newCategoryName },
+        select: { id: true },
+      });
+
+      if (existingCategory) {
+        categoryId = existingCategory.id;
+      } else {
+        const maxCategory = await prisma.category.findFirst({
+          orderBy: { sortOrder: "desc" },
+          select: { sortOrder: true },
+        });
+        const category = await prisma.category.create({
+          data: {
+            name: newCategoryName,
+            sortOrder: (maxCategory?.sortOrder ?? -1) + 1,
+          },
+          select: { id: true },
+        });
+        categoryId = category.id;
+      }
+    }
+
     const templateData = {
       title: data.title.trim(),
       description: data.description.trim(),
       content: data.content?.trim() || null,
-      categoryId: data.categoryId?.trim() || null,
+      categoryId,
     };
 
     let id: string;
@@ -100,6 +128,7 @@ export async function saveTemplate(
     }
 
     revalidatePath("/admin/templates");
+    revalidatePath("/admin/categories");
     revalidatePath("/admin");
     return { success: true, templateId: id };
   } catch (e) {

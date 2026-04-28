@@ -1,5 +1,6 @@
 // 導師卡片 — Silk & Shadow
 import Link from "next/link";
+import Image from "next/image";
 
 interface TeacherCardProps {
   id: string;
@@ -25,11 +26,14 @@ export function TeacherCard({
       style={{ animationDelay: `${index * 0.1}s` }}
     >
       {/* 照片 — 方正無圓角 */}
-      <div className="aspect-[3/4] bg-mist overflow-hidden shadow-[var(--shadow-soft)]">
+      <div className="relative aspect-[3/4] bg-mist overflow-hidden shadow-soft">
         {photo ? (
-          <img
+          <Image
             src={photo}
             alt={name}
+            fill
+            sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, calc(100vw - 48px)"
+            unoptimized
             className="w-full h-full object-cover mix-blend-multiply opacity-90 group-hover:scale-105 group-hover:opacity-100 group-hover:mix-blend-normal transition-all duration-1000"
           />
         ) : (
